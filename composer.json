@@ -1,0 +1,31 @@
+{
+    "name": "amanank/hal-client",
+    "description": "A PHP client for interacting with HAL APIs.",
+    "type": "library",
+    "require": {
+        "php": ">=7.2",
+        "illuminate/support": "^8.0|^9.0|^10.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "illuminate/filesystem": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Amanank\\HalClient\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "orchestra/testbench": "^6.0"
+    },
+    "scripts": {
+        "test": "phpunit --testdox tests"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Atta Khalid",
+            "email": "amanan@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}

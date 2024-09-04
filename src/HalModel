@@ -1,0 +1,18 @@
+<?php
+
+namespace Amanank\HalClient;
+
+class HalModel
+{
+    protected $_endpoint;
+
+
+    protected static function search(string $endpoint, $params)
+    {
+        $model = new static();
+        $model->_endpoint = $endpoint;
+        return $model;
+    }
+
+
+}
