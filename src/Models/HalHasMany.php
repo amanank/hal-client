@@ -90,11 +90,22 @@ class HalHasMany extends Relation {
     }
 
     public function attach($id) {
-        throw new \Exception('Attach not supported for HalHasMany relation');
+        $this->associate($this->related::find($id));
     }
 
     public function attachMany($ids) {
-        throw new \Exception('Attach not supported for HalHasMany relation');
+        foreach ($ids as $id) {
+            $this->attach($id);
+        }
+    }
+
+    public function detach($id = null) {
+        if (is_null($id)) {
+            $this->entity->setAttribute($this->relationsName, collect());
+        } else {
+            $this->entity->setAttribute($this->relationsName, $this->entity->{$this->relationsName}->filter(fn($model) => !$model->hasId($id)));
+        }
+        return $this->entity;
     }
 
     public function addConstraints() {

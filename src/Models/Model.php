@@ -33,8 +33,11 @@ abstract class Model extends EloquentModel {
     }
 
     public function getId() {
-        $parts = explode('/', $this->getLinkHref('self'));
-        return end($parts);
+        return $this->getIdFromLink($this->getLinkHref('self'));
+    }
+
+    public function hasId($id) {
+        return $this->getId() == $this->getIdFromLink($id);
     }
 
     public function getLink() {
@@ -70,6 +73,11 @@ abstract class Model extends EloquentModel {
         return $attributes;
     }
 
+    protected function clearRelationCache() {
+        foreach ($this->getRelations() as $relationName => $relation) {
+            $this->unsetRelation($relationName);
+        }
+    }
 
     protected function performUpdate($query): bool {
         if ($this->fireModelEvent('updating') === false) {
@@ -84,6 +92,8 @@ abstract class Model extends EloquentModel {
             echo "Updated entity!\n";
 
             $this->syncChanges();
+
+            $this->clearRelationCache();
 
             $this->fireModelEvent('updated', false);
         }
@@ -123,6 +133,8 @@ abstract class Model extends EloquentModel {
         $this->exists = true;
 
         $this->wasRecentlyCreated = true;
+
+        $this->clearRelationCache();
 
         $this->fireModelEvent('created', false);
 
