@@ -2,18 +2,20 @@
 
 namespace Amanank\HalClient\Models;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class HalHasOne extends Relation {
-    protected $parent;
+class HalHasOne extends BelongsTo {
+    protected $entity;
     protected $related;
     protected $link;
+    protected $relationsName;
 
-    public function __construct($parent, $related, $link) {
-        $this->parent = $parent;
+    public function __construct($entity, $related, $link, $relationsName) {
+        $this->entity = $entity;
         $this->related = new $related();
         $this->link = $link;
+        $this->relationsName = $relationsName;
     }
 
     public function getResults() {
@@ -21,9 +23,9 @@ class HalHasOne extends Relation {
             return null;
         }
         try {
-            $response = $this->parent->getConnection()->get($this->link);
-            $attributes = json_decode($response->getBody()->getContents(), true);
-            $this->related->setRawAttributes((array) $attributes, true);
+            $this->related->setRawAttributes($this->entity->getConnection()->getData($this->link), true);
+            echo "HalHasOne Found related model: " . $this->related->getSelfLink() . "\n";
+
             return $this->related;
         } catch (RequestException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
@@ -31,6 +33,44 @@ class HalHasOne extends Relation {
             }
             throw $e;
         }
+    }
+
+    /**
+     * Associate the model instance to the given entity.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model|null  $model
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function associate($model) {
+        if (is_null($model)) {
+            \Log::error('Attempted to associate a null model.');
+            throw new \InvalidArgumentException('Cannot associate a null model.');
+        }
+
+        if (!$model instanceof Model) {
+            \Log::error('Associate must be an instance of ' . Model::class);
+            throw new \InvalidArgumentException('Associate must be an instance of ' . Model::class);
+        }
+
+        if (!$model->exists) {
+            \Log::error('Attempted to associate a model that has not been saved.');
+            throw new \InvalidArgumentException('Cannot associate a model that has not been saved.');
+        }
+
+        // Set the related model
+        $this->related = $model;
+
+        //$ownerKey = $model instanceof Model ? $model->getSelfLink() : $model;
+        $this->entity->setAttribute($this->relationsName, $model);
+
+        // Set or unset the relation on the entity model
+        if ($model instanceof Model) {
+            $this->entity->setRelation($this->relationName, $model);
+        } else {
+            $this->entity->unsetRelation($this->relationName);
+        }
+
+        return $this->entity;
     }
 
     public function addConstraints() {

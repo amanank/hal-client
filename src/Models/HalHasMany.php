@@ -6,14 +6,16 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use GuzzleHttp\Exception\RequestException;
 
 class HalHasMany extends Relation {
-    protected $parent;
+    protected $entity;
     protected $related;
     protected $link;
+    protected $relationsName;
 
-    public function __construct($parent, $related, $link) {
-        $this->parent = $parent;
-        $this->related = new $related();
+    public function __construct($entity, $related, $link, $relationsName) {
+        $this->entity = $entity;
+        $this->related = $related;
         $this->link = $link;
+        $this->relationsName = $relationsName;
     }
 
     public function getResults() {
@@ -21,7 +23,7 @@ class HalHasMany extends Relation {
             return collect();
         }
         try {
-            $response = $this->parent->getConnection()->get($this->link);
+            $response = $this->entity->getConnection()->get($this->link);
             $embededProperty = basename($this->link);
 
             $response = json_decode($response->getBody(), true);
@@ -29,10 +31,11 @@ class HalHasMany extends Relation {
             $entities = $response["_embedded"][$embededProperty];
 
             $collection = collect($entities)->map(function ($item) {
-                $model = clone $this->related;
+                $model = new $this->related();
                 $model->setRawAttributes((array) $item, true);
                 return $model;
             });
+            echo "HalHasMany Found related models: " . $this->related . " " . $collection->count() . "\n";
             return $collection;
         } catch (RequestException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
@@ -40,6 +43,58 @@ class HalHasMany extends Relation {
             }
             throw $e;
         }
+    }
+
+    public function associate($model) {
+        if (is_null($model)) {
+            \Log::error('Attempted to associate a null model.');
+            throw new \InvalidArgumentException('Cannot associate a null model.');
+        }
+
+        if (!$model instanceof $this->related) {
+            \Log::error('Associate must be an instance of ' . $this->related);
+            throw new \InvalidArgumentException('Associate must be an instance of ' . $this->related);
+        }
+
+        if (!$model->exists) {
+            \Log::error('Attempted to associate a model that has not been saved.');
+            throw new \InvalidArgumentException('Cannot associate a model that has not been saved.');
+        }
+
+        // Add the model to the entitie's relation
+        $relations = $this->entity->{$this->relationsName};
+        $relations->push($model);
+
+        // Mark the entity as dirty
+        $this->entity->setAttribute($this->relationsName, $relations);
+
+        return $this->entity;
+    }
+
+    public function save($model) {
+
+        if (!is_null($model) && $model instanceof Model && !$model->exists) {
+            $model->save();
+        }
+
+        $this->associate($model);
+
+        return $model;
+    }
+
+    public function saveMany(array $models) {
+        foreach ($models as $model) {
+            $this->save($model);
+        }
+        return $models;
+    }
+
+    public function attach($id) {
+        throw new \Exception('Attach not supported for HalHasMany relation');
+    }
+
+    public function attachMany($ids) {
+        throw new \Exception('Attach not supported for HalHasMany relation');
     }
 
     public function addConstraints() {

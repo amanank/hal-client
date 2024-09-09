@@ -28,6 +28,21 @@ class Client {
         }
     }
 
+    public function getData($uri, $options = []): array {
+        try {
+            $response = $this->client->request('GET', $uri, $options);
+            if ($response->getStatusCode() == 404) {
+                return null;
+            } else if ($response->getStatusCode() != 200) {
+                throw new \Exception("Unknown Get response status code {$response->getStatusCode()} expecting 200 or 404");
+            }
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (RequestException $e) {
+            // Handle exception or rethrow
+            throw $e;
+        }
+    }
+
     public function getJson($uri, $options = []): array {
         $response = $this->get($uri, $options);
         if ($response->getStatusCode() == 404) {
@@ -52,10 +67,10 @@ class Client {
     public function update($uri, $data = [], $options = []): bool {
         $response = $this->put($uri, $data, $options);
         // check for no content response
-        if ($response->getStatusCode() == 204) {
+        if ($response->getStatusCode() == 200 || $response->getStatusCode() == 204) {
             return true;
         } else {
-            throw new \Exception("Unknown Put response status code {$response->getStatusCode()} expecting 204");
+            throw new \Exception("Unknown Put response status code {$response->getStatusCode()}");
         }
     }
 
@@ -89,6 +104,20 @@ class Client {
         try {
             $response = $this->client->request('DELETE', $uri, $options);
             return $response;
+        } catch (RequestException $e) {
+            // Handle exception or rethrow
+            throw $e;
+        }
+    }
+
+    public function remove($selfHref, $options = []): bool {
+        try {
+            $response = $this->client->request('DELETE', $selfHref, $options);
+            if ($response->getStatusCode() == 204) {
+                return true;
+            } else {
+                throw new \Exception("Unknown Delete response status code {$response->getStatusCode()} expecting 204");
+            }
         } catch (RequestException $e) {
             // Handle exception or rethrow
             throw $e;
