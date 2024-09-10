@@ -1,0 +1,74 @@
+{
+  "alps": {
+    "version": "1.0",
+    "descriptor": [
+      {
+        "id": "post-representation",
+        "href": "https://mockapi.example.com/api/v1/profile/posts",
+        "descriptor": [
+          { "name": "title", "type": "SEMANTIC" },
+          { "name": "content", "type": "SEMANTIC" },
+          { "name": "author", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/users#user-representation" },
+          { "name": "tags", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/tags#tag-representation" },
+          { "name": "status", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "DRAFT, PUBLISHED, ARCHIVED" } },
+          { "name": "createdAt", "type": "SEMANTIC" },
+          { "name": "updatedAt", "type": "SEMANTIC" }
+        ]
+      },
+      {
+        "id": "create-post",
+        "name": "posts",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#post-representation"
+      },
+      {
+        "id": "get-posts",
+        "name": "posts",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "page", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The page to return." } },
+          { "name": "size", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The size of the page to return." } },
+          { "name": "sort", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The sorting criteria to use to calculate the content of the page." } }
+        ],
+        "rt": "#post-representation"
+      },
+      {
+        "id": "get-post",
+        "name": "post",
+        "type": "SAFE",
+        "descriptor": [],
+        "rt": "#post-representation"
+      },
+      {
+        "id": "update-post",
+        "name": "post",
+        "type": "IDEMPOTENT",
+        "descriptor": [],
+        "rt": "#post-representation"
+      },
+      {
+        "id": "patch-post",
+        "name": "post",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#post-representation"
+      },
+      {
+        "name": "findByAuthorId",
+        "type": "SAFE",
+        "descriptor": [
+          {
+            "name": "authorId",
+            "type": "SEMANTIC",
+            "doc": {
+              "format": "TEXT",
+              "value": "The ID of the author to search for."
+            }
+          }
+        ],
+        "rt": "#post-representation"
+      }
+    ]
+  }
+}

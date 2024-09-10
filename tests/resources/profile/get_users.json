@@ -1,0 +1,83 @@
+{
+  "alps": {
+    "version": "1.0",
+    "descriptor": [
+      {
+        "id": "user-representation",
+        "href": "https://mockapi.example.com/api/v1/profile/users",
+        "descriptor": [
+          { "name": "username", "type": "SEMANTIC" },
+          { "name": "email", "type": "SEMANTIC" },
+          { "name": "firstName", "type": "SEMANTIC" },
+          { "name": "lastName", "type": "SEMANTIC" },
+          { "name": "status", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "ACTIVE, INACTIVE, BANNED" } },
+          { "name": "createdAt", "type": "SEMANTIC" },
+          { "name": "updatedAt", "type": "SEMANTIC" }
+        ]
+      },
+      {
+        "id": "create-user",
+        "name": "users",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#user-representation"
+      },
+      {
+        "id": "get-users",
+        "name": "users",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "page", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The page to return." } },
+          { "name": "size", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The size of the page to return." } },
+          { "name": "sort", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The sorting criteria to use to calculate the content of the page." } }
+        ],
+        "rt": "#user-representation"
+      },
+      {
+        "id": "get-user",
+        "name": "user",
+        "type": "SAFE",
+        "descriptor": [],
+        "rt": "#user-representation"
+      },
+      {
+        "id": "update-user",
+        "name": "user",
+        "type": "IDEMPOTENT",
+        "descriptor": [],
+        "rt": "#user-representation"
+      },
+      {
+        "id": "patch-user",
+        "name": "user",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#user-representation"
+      },
+      {
+        "name": "findByLastName",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "lastName", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The last name to search for." } }
+        ],
+        "rt": "#user-representation"
+      },
+      {
+        "name": "getByEmail",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "email", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The email to search for." } }
+        ],
+        "rt": "#user-representation"
+      },
+      {
+        "name": "getByUsername",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "username", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The username to search for." } }
+        ],
+        "rt": "#user-representation"
+      }
+    ]
+  }
+}

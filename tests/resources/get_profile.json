@@ -1,0 +1,19 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://mockapi.example.com/api/v1/profile"
+    },
+    "users": {
+      "href": "https://mockapi.example.com/api/v1/profile/users"
+    },
+    "posts": {
+      "href": "https://mockapi.example.com/api/v1/profile/posts"
+    },
+    "comments": {
+      "href": "https://mockapi.example.com/api/v1/profile/comments"
+    },
+    "tags": {
+      "href": "https://mockapi.example.com/api/v1/profile/tags"
+    }
+  }
+}

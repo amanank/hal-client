@@ -1,0 +1,57 @@
+{
+  "alps": {
+    "version": "1.0",
+    "descriptor": [
+      {
+        "id": "comment-representation",
+        "href": "https://mockapi.example.com/api/v1/profile/comments",
+        "descriptor": [
+          { "name": "content", "type": "SEMANTIC" },
+          { "name": "author", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/users#user-representation" },
+          { "name": "post", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/posts#post-representation" },
+          { "name": "createdAt", "type": "SEMANTIC" },
+          { "name": "updatedAt", "type": "SEMANTIC" }
+        ]
+      },
+      {
+        "id": "create-comment",
+        "name": "comments",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#comment-representation"
+      },
+      {
+        "id": "get-comments",
+        "name": "comments",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "page", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The page to return." } },
+          { "name": "size", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The size of the page to return." } },
+          { "name": "sort", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The sorting criteria to use to calculate the content of the page." } }
+        ],
+        "rt": "#comment-representation"
+      },
+      {
+        "id": "get-comment",
+        "name": "comment",
+        "type": "SAFE",
+        "descriptor": [],
+        "rt": "#comment-representation"
+      },
+      {
+        "id": "update-comment",
+        "name": "comment",
+        "type": "IDEMPOTENT",
+        "descriptor": [],
+        "rt": "#comment-representation"
+      },
+      {
+        "id": "patch-comment",
+        "name": "comment",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#comment-representation"
+      }
+    ]
+  }
+}

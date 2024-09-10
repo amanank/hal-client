@@ -23,9 +23,10 @@
         "editor.multiCursorModifier": "alt",
         // "phpunit.command": "docker exec -t dev_a1j_${env:USERNAME} /bin/sh -c", add this at user level; env:USERNAME not working
         // Under settings go to `@ext:recca0120.vscode-phpunit` and add php unit command e.g. `docker exec -t dev_a1j_atta /bin/sh -c`
-        "phpunit.phpunit": "artisan test",
+        "phpunit.command": "docker exec -t php /bin/sh -c",
+        "phpunit.phpunit": "vendor/bin/phpunit",
         "phpunit.paths": {
-            "${workspaceFolder}": "/app/tests"
+            "${workspaceFolder}": "/app/"
         }
 	}
 }

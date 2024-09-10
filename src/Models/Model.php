@@ -204,12 +204,21 @@ abstract class Model extends EloquentModel {
             return null;
         }
 
-        $model->setRawAttributes((array) $attributes, true);
-        $model->exists = true;
+        if (is_array($attributes) && isset($attributes['_embedded'])) {
+            return (new Collection($attributes['_embedded']))
+            ->map(fn($attributes) => new static($attributes))
+                ->each(fn($model) => $model->exists = true)
+                ->each(fn($model) => $model->fireModelEvent('retrieved', false));
+        } else if (is_scalar($attributes)) {
+            return $attributes;
+        } else {
+            $model->setRawAttributes((array) $attributes, true);
+            $model->exists = true;
 
-        $model->fireModelEvent('retrieved', false);
+            $model->fireModelEvent('retrieved', false);
 
-        return $model;
+            return $model;
+        }
     }
 
     // TODO: Implement push() method to also save related entities

@@ -81,7 +81,7 @@ class EntityDescriptor {
 
     protected function setReturnType($item) {
         if (isset($item['doc']) && $item['doc']['format'] === 'TEXT') {
-            $name = ucfirst($item['name'])  . 'Enum';
+            $name = $this->getClassName() . ucfirst($item['name'])  . 'Enum';
             $this->enums->put($name, [
                 'name' => $name,
                 'propertyName' => $item['name'],

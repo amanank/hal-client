@@ -2,16 +2,19 @@
 
 namespace Amanank\HalClient;
 
-use Amanank\HalClient\Query\QueryBuilder;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
 
 class Client {
     private $client;
 
-    public function __construct($config = []) {
-        $config['allow_redirects'] = false;
-        $this->client = new GuzzleClient($config);
+    public function __construct($config = [], GuzzleClient $client = null) {
+        if (!$client) {
+            $config['allow_redirects'] = false;
+            $this->client = new GuzzleClient($config);
+        } else {
+            $this->client = $client;
+        }
     }
 
     public function query() {
@@ -43,7 +46,7 @@ class Client {
         }
     }
 
-    public function getJson($uri, $options = []): array {
+    public function getJson($uri, $options = []) {
         $response = $this->get($uri, $options);
         if ($response->getStatusCode() == 404) {
             return null;

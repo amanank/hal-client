@@ -24,7 +24,7 @@ class HalHasOne extends BelongsTo {
         }
         try {
             $this->related->setRawAttributes($this->entity->getConnection()->getData($this->link), true);
-            echo "HalHasOne Found related model: " . $this->related->getSelfLink() . "\n";
+            echo "HalHasOne Found related model: " . $this->related->getLink() . "\n";
 
             return $this->related;
         } catch (RequestException $e) {

@@ -4,6 +4,7 @@ namespace Amanank\HalClient\Models;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Facades\Log;
 
 class HalHasMany extends Relation {
     protected $entity;
@@ -47,17 +48,17 @@ class HalHasMany extends Relation {
 
     public function associate($model) {
         if (is_null($model)) {
-            \Log::error('Attempted to associate a null model.');
+            Log::error('Attempted to associate a null model.');
             throw new \InvalidArgumentException('Cannot associate a null model.');
         }
 
         if (!$model instanceof $this->related) {
-            \Log::error('Associate must be an instance of ' . $this->related);
+            Log::error('Associate must be an instance of ' . $this->related);
             throw new \InvalidArgumentException('Associate must be an instance of ' . $this->related);
         }
 
         if (!$model->exists) {
-            \Log::error('Attempted to associate a model that has not been saved.');
+            Log::error('Attempted to associate a model that has not been saved.');
             throw new \InvalidArgumentException('Cannot associate a model that has not been saved.');
         }
 

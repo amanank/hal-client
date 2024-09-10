@@ -1,0 +1,64 @@
+{
+  "alps": {
+    "version": "1.0",
+    "descriptor": [
+      {
+        "id": "tag-representation",
+        "href": "https://mockapi.example.com/api/v1/profile/tags",
+        "descriptor": [
+          { "name": "name", "type": "SEMANTIC" },
+          { "name": "slug", "type": "SEMANTIC" },
+          { "name": "createdAt", "type": "SEMANTIC" },
+          { "name": "updatedAt", "type": "SEMANTIC" }
+        ]
+      },
+      {
+        "id": "create-tag",
+        "name": "tags",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#tag-representation"
+      },
+      {
+        "id": "get-tags",
+        "name": "tags",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "page", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The page to return." } },
+          { "name": "size", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The size of the page to return." } },
+          { "name": "sort", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The sorting criteria to use to calculate the content of the page." } }
+        ],
+        "rt": "#tag-representation"
+      },
+      {
+        "id": "get-tag",
+        "name": "tag",
+        "type": "SAFE",
+        "descriptor": [],
+        "rt": "#tag-representation"
+      },
+      {
+        "id": "update-tag",
+        "name": "tag",
+        "type": "IDEMPOTENT",
+        "descriptor": [],
+        "rt": "#tag-representation"
+      },
+      {
+        "id": "patch-tag",
+        "name": "tag",
+        "type": "UNSAFE",
+        "descriptor": [],
+        "rt": "#tag-representation"
+      },
+      {
+        "name": "getByName",
+        "type": "SAFE",
+        "descriptor": [
+          { "name": "name", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "The name to search for." } }
+        ],
+        "rt": "#user-representation"
+      }
+    ]
+  }
+}
