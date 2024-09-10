@@ -93,8 +93,6 @@ abstract class Model extends EloquentModel {
         if (count($dirty) > 0) {
             $this->getConnection()->update($this->attributes['_links']['self']['href'], $this->getAttributesForSave());
 
-            echo "Updated entity!\n";
-
             $this->syncChanges();
 
             $this->clearRelationCache();
@@ -103,8 +101,6 @@ abstract class Model extends EloquentModel {
         }
 
         return true;
-
-        return false;
     }
 
     public function refresh() {
@@ -132,8 +128,6 @@ abstract class Model extends EloquentModel {
 
         $this->attributes['_links']['self']['href'] = $selfHref;
 
-        echo "Created entity: $selfHref\n";
-
         $this->exists = true;
 
         $this->wasRecentlyCreated = true;
@@ -147,7 +141,7 @@ abstract class Model extends EloquentModel {
 
     public function save(array $options = []) {
         try {
-            parent::save($options);
+            return parent::save($options);
         } catch (ClientException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 409) {
                 throw (new ConstraintViolationException("Constraint violation", 409, $e))->setModel(
