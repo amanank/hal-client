@@ -159,6 +159,6 @@ class EntityDescriptor {
     }
 
     protected function getEnumGetter($enum): string {
-        return "protected function get" . ucfirst($enum['propertyName']) . "Attribute(string \${$enum['propertyName']}) {\n\t\treturn new Enums\\{$enum['name']}(\${$enum['propertyName']});\n\t}";
+        return "protected function get" . ucfirst($enum['propertyName']) . "Attribute(string \${$enum['propertyName']}) {\n\t\treturn Enums\\{$enum['name']}::from(\${$enum['propertyName']});\n\t}";
     }
 }

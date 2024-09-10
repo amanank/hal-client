@@ -1,0 +1,83 @@
+{
+  "_embedded": {
+    "users": [
+      {
+        "username": "john.doe",
+        "email": "john.doe@example.com",
+        "firstName": "John",
+        "lastName": "Doe",
+        "status": "ACTIVE",
+        "createdAt": "2023-10-01T12:34:56Z",
+        "updatedAt": "2023-10-01T12:34:56Z",
+        "_links": {
+          "self": {
+            "href": "users/1"
+          },
+          "user": {
+            "href": "users/1"
+          }
+        }
+      },
+      {
+        "username": "jane.doe",
+        "email": "jane.doe@example.com",
+        "firstName": "Jane",
+        "lastName": "Doe",
+        "status": "INACTIVE",
+        "createdAt": "2023-09-15T08:22:33Z",
+        "updatedAt": "2023-09-15T08:22:33Z",
+        "_links": {
+          "self": {
+            "href": "users/2"
+          },
+          "user": {
+            "href": "users/2"
+          }
+        }
+      },
+      {
+        "username": "bob.smith",
+        "email": "bob.smith@example.com",
+        "firstName": "Bob",
+        "lastName": "Smith",
+        "status": "SUSPENDED",
+        "createdAt": "2023-08-20T14:45:12Z",
+        "updatedAt": "2023-08-20T14:45:12Z",
+        "_links": {
+          "self": {
+            "href": "users/3"
+          },
+          "user": {
+            "href": "users/3"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "first": {
+      "href": "https://example.com/api/v1/users?page=0&size=3"
+    },
+    "self": {
+      "href": "https://example.com/api/v1/users?page=0&size=3"
+    },
+    "next": {
+      "href": "https://example.com/api/v1/users?page=1&size=3"
+    },
+    "last": {
+      "href": "https://example.com/api/v1/users?page=2&size=3"
+    },
+    "profile": {
+      "href": "https://example.com/api/v1/profile/users"
+    },
+    "search": {
+      "href": "https://example.com/api/v1/users/search"
+    }
+  },
+  "page": {
+    "size": 3,
+    "totalElements": 9,
+    "totalPages": 3,
+    "number": 0
+  }
+}

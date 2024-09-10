@@ -1,0 +1,15 @@
+{
+    "status": "CONFLICT",
+    "timestamp": "10-09-2024 06:24:37",
+    "message": "Unique index or primary key violation",
+    "debugMessage": "could not execute statement [Unique index or primary key violation: \"PUBLIC.CONSTRAINT_INDEX_3 ON PUBLIC.USERS(EMAIL NULLS FIRST) VALUES ( /* 1 */ 'john.doe@example.com' )\"; SQL statement:\ninsert into users (username, email, first_name, last_name, id) values (?,?,?,?,default) [23505-224]] [insert into users (username, email, first_name, last_name, id) values (?,?,?,?,default)]",
+    "subErrors": [
+        {
+            "object": "User",
+            "field": "email",
+            "rejectedValue": "john.doe@example.com",
+            "message": "Email must be unique.",
+            "code": "UNIQUE"
+        }
+    ]
+}

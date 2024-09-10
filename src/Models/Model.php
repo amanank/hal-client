@@ -6,6 +6,10 @@ namespace Amanank\HalClient\Models;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 
 use Amanank\HalClient\Client;
+use Amanank\HalClient\Exceptions\ConstraintViolationException;
+use Amanank\HalClient\Exceptions\ModelNotFoundException;
+use GuzzleHttp\Exception\ClientException;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 abstract class Model extends EloquentModel {
@@ -141,6 +145,20 @@ abstract class Model extends EloquentModel {
         return true;
     }
 
+    public function save(array $options = []) {
+        try {
+            parent::save($options);
+        } catch (ClientException $e) {
+            if ($e->getResponse() && $e->getResponse()->getStatusCode() == 409) {
+                throw (new ConstraintViolationException("Constraint violation", 409, $e))->setModel(
+                    get_class($this),
+                    $this->exists ? $this->getLink() : null
+                );
+            }
+            throw $e;
+        }
+    }
+
     protected function performDeleteOnModel() {
         $this->getConnection()->remove($this->attributes['_links']['self']['href']);
 
@@ -163,7 +181,7 @@ abstract class Model extends EloquentModel {
         return end($parts);
     }
 
-    public static function find($id) {
+    public static function findOrFail($id) {
         $model = new static();
         $id = $model->getIdFromLink($id);
         try {
@@ -178,25 +196,36 @@ abstract class Model extends EloquentModel {
             return $model;
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
-                return null;
+                throw (new ModelNotFoundException("Model not found", 404, $e))->setModel(
+                    get_class($model),
+                    $id
+                );
             }
             throw $e;
         }
     }
 
-    public static function findOrFail($id) {
-        $model = static::find($id);
-        if ($model) {
-            return $model;
+    public static function find($id) {
+        try {
+            return static::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return null;
         }
-        throw new \Exception("Model not found");
     }
 
     public function newModelQuery() {
         return null; //query is not supported
     }
 
-    public static function search($method, $params) {
+    public static function get($page = null, $size = null, $sort = null): LengthAwarePaginator {
+        $model = new static();
+        $response = $model->getConnection()->getJson($model->_endpoint, ['query' => compact('page', 'size', 'sort')]);
+        $models = static::formatEmbededResponse($response['_embedded'][$model->_endpoint]);
+
+        return new LengthAwarePaginator($models, $response['page']['totalElements'], $response['page']['size'], $response['page']['number']);
+    }
+
+    protected static function search($method, $params) {
         $model = new static();
         $attributes = $model->getConnection()->getJson($model->_endpoint . "/search/{$method}", ['query' => $params]);
 
@@ -205,10 +234,7 @@ abstract class Model extends EloquentModel {
         }
 
         if (is_array($attributes) && isset($attributes['_embedded'])) {
-            return (new Collection($attributes['_embedded']))
-            ->map(fn($attributes) => new static($attributes))
-                ->each(fn($model) => $model->exists = true)
-                ->each(fn($model) => $model->fireModelEvent('retrieved', false));
+            return static::formatEmbededResponse($attributes['_embedded']);
         } else if (is_scalar($attributes)) {
             return $attributes;
         } else {
@@ -219,6 +245,13 @@ abstract class Model extends EloquentModel {
 
             return $model;
         }
+    }
+
+    protected static function formatEmbededResponse($items): Collection {
+        return (new Collection($items))
+            ->map(fn($itemAttributes) => (new static())->setRawAttributes((array) $itemAttributes, true))
+            ->each(fn($model) => $model->exists = true)
+            ->each(fn($model) => $model->fireModelEvent('retrieved', false));
     }
 
     // TODO: Implement push() method to also save related entities

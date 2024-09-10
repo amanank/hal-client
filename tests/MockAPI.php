@@ -17,8 +17,11 @@ class MockAPI {
     public static function getClient() {
         $responses = static::loadResponses();
 
+
         // Create a mock handler with the responses
-        $mock = new MockHandler(array_values($responses)[0]);
+        // these 404 responses are consumed at each call even though they are not used. So we need to fill the array with enough responses
+        // The middleware will handle the request and return the appropriate response
+        $mock = new MockHandler(array_fill(0, 100, new Response(404)));
 
         // Create a handler stack and push the mock handler
         $handlerStack = HandlerStack::create($mock);
@@ -45,12 +48,17 @@ class MockAPI {
         $method = $request->getMethod();
         $path = preg_replace('/^\/api\/v1\//', '', $request->getUri()->getPath());
 
-        if (isset($responses[$method][$path])) {
-            return $responses[$method][$path];
-        }
+        if ($method == 'POST') {
+            // if the request body contains "conflict", return a 409 response
+            if (strpos($request->getBody()->getContents(), 'conflict') !== false && isset($responses[$method][$path][409])) {
+                return $responses[$method][$path][409];
+            }
 
-        print_r([$method, $path]);
-        die();
+            // return a 201 response with the location header set to the new resource path
+            return new Response(201, ['Location' => "$path/9"]);
+        } else if (isset($responses[$method][$path][200])) {
+            return $responses[$method][$path][200];
+        }
 
         return new Response(404);
     }
@@ -77,7 +85,7 @@ class MockAPI {
 
                 echo "Loading response: $method $path\n";
 
-                $responses[strtoupper($method)][$path] = new Response($code, ['Content-Type' => 'application/hal+json'], file_get_contents($file));
+                $responses[strtoupper($method)][$path][$code] = new Response($code, ['Content-Type' => 'application/hal+json'], file_get_contents($file));
             }
         }
 

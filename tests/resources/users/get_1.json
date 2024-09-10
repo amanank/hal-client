@@ -1,0 +1,17 @@
+{
+    "username": "john.doe",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "status": "ACTIVE",
+    "createdAt": "2023-10-01T12:34:56Z",
+    "updatedAt": "2023-10-01T12:34:56Z",
+    "_links": {
+        "self": {
+            "href": "users/1"
+        },
+        "user": {
+            "href": "users/1"
+        }
+    }
+}

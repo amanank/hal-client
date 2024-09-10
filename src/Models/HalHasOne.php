@@ -4,6 +4,7 @@ namespace Amanank\HalClient\Models;
 
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 class HalHasOne extends BelongsTo {
     protected $entity;
@@ -24,8 +25,6 @@ class HalHasOne extends BelongsTo {
         }
         try {
             $this->related->setRawAttributes($this->entity->getConnection()->getData($this->link), true);
-            echo "HalHasOne Found related model: " . $this->related->getLink() . "\n";
-
             return $this->related;
         } catch (RequestException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
@@ -43,17 +42,17 @@ class HalHasOne extends BelongsTo {
      */
     public function associate($model) {
         if (is_null($model)) {
-            \Log::error('Attempted to associate a null model.');
+            Log::error('Attempted to associate a null model.');
             throw new \InvalidArgumentException('Cannot associate a null model.');
         }
 
         if (!$model instanceof Model) {
-            \Log::error('Associate must be an instance of ' . Model::class);
+            Log::error('Associate must be an instance of ' . Model::class);
             throw new \InvalidArgumentException('Associate must be an instance of ' . Model::class);
         }
 
         if (!$model->exists) {
-            \Log::error('Attempted to associate a model that has not been saved.');
+            Log::error('Attempted to associate a model that has not been saved.');
             throw new \InvalidArgumentException('Cannot associate a model that has not been saved.');
         }
 
