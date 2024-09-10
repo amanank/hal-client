@@ -114,6 +114,8 @@ class UserTest extends TestCase {
         // Assume we have a user with ID 1
         $user = User::find(1);
         $this->assertNotNull($user);
+        $this->assertTrue($user->exists);
+        $this->assertEquals('users/1', $user->getLink());
 
         // Update user details
         $user->firstName = 'UpdatedFirstName';
@@ -131,6 +133,8 @@ class UserTest extends TestCase {
         // Assume we have a user with ID 1
         $user = User::find(1);
         $this->assertNotNull($user);
+        $this->assertTrue($user->exists);
+        $this->assertEquals('users/1', $user->getLink());
 
         // Try to update user email to an existing email to trigger a constraint violation
         $user->firstName = 'conflict'; // This will trigger a 409 response
