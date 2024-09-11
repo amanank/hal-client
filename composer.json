@@ -32,5 +32,21 @@
             "email": "amanan@gmail.com"
         }
     ],
-    "minimum-stability": "stable"
+    "minimum-stability": "alpha",
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "keywords": [
+        "HAL",
+        "API",
+        "client",
+        "PHP",
+        "REST"
+    ],
+    "support": {
+        "issues": "https://github.com/amanank/hal-client/issues",
+        "source": "https://github.com/amanank/hal-client"
+    }
 }
