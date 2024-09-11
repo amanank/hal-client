@@ -48,16 +48,19 @@ class MockAPI {
         $method = $request->getMethod();
         $path = preg_replace('/^\/api\/v1\//', '', $request->getUri()->getPath());
 
-        if ($method == 'POST') {
+        if ($method == 'POST' || $method == 'PUT') {
             // if the request body contains "conflict", return a 409 response
             if (strpos($request->getBody()->getContents(), 'conflict') !== false && isset($responses[$method][$path][409])) {
-                return $responses[$method][$path][409];
+                list($code, $headers, $body) = $responses[$method][$path][409];
+                return new Response($code, $headers, $body);
             }
 
-            // return a 201 response with the location header set to the new resource path
-            return new Response(201, ['Location' => "$path/9"]);
+            return $method == 'POST'
+                ? new Response(201, ['Location' => "$path/9"]) // return a 201 response with the location header set to the new resource path
+                : new Response(204);
         } else if (isset($responses[$method][$path][200])) {
-            return $responses[$method][$path][200];
+            list($code, $headers, $body) = $responses[$method][$path][200];
+            return new Response($code, $headers, $body);
         }
 
         return new Response(404);
@@ -85,7 +88,7 @@ class MockAPI {
 
                 echo "Loading response: $method $path\n";
 
-                $responses[strtoupper($method)][$path][$code] = new Response($code, ['Content-Type' => 'application/hal+json'], file_get_contents($file));
+                $responses[strtoupper($method)][$path][$code] = [$code, ['Content-Type' => 'application/hal+json'], file_get_contents($file)];
             }
         }
 

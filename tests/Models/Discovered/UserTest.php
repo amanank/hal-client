@@ -35,7 +35,7 @@ class UserTest extends TestCase {
         ];
     }
 
-    public function testFindUser() {
+    public function testFindUserByIdReturnsUser() {
         $user = User::find(1);
         $this->assertNotNull($user);
         $this->assertEquals('John', $user->firstName);
@@ -45,19 +45,19 @@ class UserTest extends TestCase {
         $this->assertEquals('ACTIVE', $user->status->value);
     }
 
-    public function testFindUserNull() {
+    public function testFindUserByIdReturnsNullForNonExistentUser() {
         $user = User::find(100);
         $this->assertNull($user);
     }
 
-    public function testFindUserFail404() {
+    public function testFindOrFailThrowsExceptionForNonExistentUser() {
         $this->expectException(ModelNotFoundException::class);
         $this->expectExceptionMessage("No results for GET model [" . User::class . "] with id [100].");
 
         User::findOrFail(100);
     }
 
-    public function testCreateUser() {
+    public function testCreateUserSuccessfully() {
         $user = new User();
         $user->username = 'unit.test';
         $user->email = 'unit.test@phpunit';
@@ -71,7 +71,7 @@ class UserTest extends TestCase {
         $this->assertEquals('users/9', $user->getLink());
     }
 
-    public function testCreateUserConflict() {
+    public function testCreateUserThrowsConstraintViolationException() {
         $this->expectException(ConstraintViolationException::class);
         $this->expectExceptionMessage("Constraint violation for model [" . User::class . "] with id [].");
         $this->expectExceptionCode(409);
@@ -100,7 +100,7 @@ class UserTest extends TestCase {
         }
     }
 
-    public function testGetUsers() {
+    public function testGetUsersReturnsPaginatedList() {
         $usersPage = User::get();
 
         $this->assertCount(3, $usersPage);
@@ -108,5 +108,55 @@ class UserTest extends TestCase {
         $this->assertEquals('Doe', $usersPage[0]->lastName);
         $this->assertEquals(9, $usersPage->total());
         $this->assertEquals(1, $usersPage->currentPage());
+    }
+
+    public function testUpdateUserSuccessfully() {
+        // Assume we have a user with ID 1
+        $user = User::find(1);
+        $this->assertNotNull($user);
+        $this->assertTrue($user->exists);
+        $this->assertEquals('users/1', $user->getLink());
+
+        // Update user details
+        $user->firstName = 'UpdatedFirstName';
+        $user->lastName = 'UpdatedLastName';
+        $user->email = 'updated.email@example.com';
+
+        $this->assertTrue($user->isDirty());
+
+        $this->assertTrue($user->save());
+
+        $this->assertFalse($user->isDirty());
+    }
+
+    public function testUpdateUserThrowsConstraintViolationException() {
+        // Assume we have a user with ID 1
+        $user = User::find(1);
+        $this->assertNotNull($user);
+        $this->assertTrue($user->exists);
+        $this->assertEquals('users/1', $user->getLink());
+
+        // Try to update user email to an existing email to trigger a constraint violation
+        $user->firstName = 'conflict'; // This will trigger a 409 response
+
+        $this->expectException(ConstraintViolationException::class);
+        $this->expectExceptionMessage("Constraint violation for model [" . User::class . "] with id [users/1].");
+        $this->expectExceptionCode(409);
+
+        try {
+            $user->save();
+        } catch (ConstraintViolationException $e) {
+            $this->assertEquals(User::class, $e->getModel());
+            $this->assertEquals("users/1", $e->getId());
+            $this->assertNotNull($e->getResponse());
+
+            $this->assertEquals('CONFLICT', $e->getResponse()['status']);
+            $this->assertEquals('Unique index or primary key violation', $e->getResponse()['message']);
+            $this->assertEquals('User', $e->getResponse()['subErrors'][0]['object']);
+            $this->assertEquals('email', $e->getResponse()['subErrors'][0]['field']);
+            $this->assertEquals('Email must be unique.', $e->getResponse()['subErrors'][0]['message']);
+
+            throw $e;
+        }
     }
 }

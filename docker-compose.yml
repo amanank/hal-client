@@ -1,0 +1,11 @@
+services:
+  php:
+    container_name: php
+    build: .
+    volumes:
+      - ".:/app"
+    command: >
+      sh -c "
+      composer update &&
+      composer dump-autoload &&
+      while true; do sleep 1000; done"

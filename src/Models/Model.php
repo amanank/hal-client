@@ -49,7 +49,7 @@ abstract class Model extends EloquentModel {
     }
 
     protected function getLinkHref($rel) {
-        return isset($this->_links[$rel]) ? $this->_links[$rel]['href'] : null;
+        return isset($this->attributes['_links'][$rel]) ? $this->attributes['_links'][$rel]['href'] : null;
     }
 
     public function hasOne($related, $property = null, $localKey = null) {
@@ -91,9 +91,7 @@ abstract class Model extends EloquentModel {
         $dirty = $this->getDirty();
 
         if (count($dirty) > 0) {
-            $this->getConnection()->update($this->attributes['_links']['self']['href'], $this->getAttributesForSave());
-
-            echo "Updated entity!\n";
+            $this->getConnection()->update($this->getLinkHref('self'), $this->getAttributesForSave());
 
             $this->syncChanges();
 
@@ -103,8 +101,6 @@ abstract class Model extends EloquentModel {
         }
 
         return true;
-
-        return false;
     }
 
     public function refresh() {
@@ -113,7 +109,7 @@ abstract class Model extends EloquentModel {
         }
 
         $this->setRawAttributes(
-            $this->getConnection()->getData($this->attributes['_links']['self']['href'])
+            $this->getConnection()->getData($this->getLinkHref('self'))
         );
 
         //TODO: refresh relations
@@ -132,8 +128,6 @@ abstract class Model extends EloquentModel {
 
         $this->attributes['_links']['self']['href'] = $selfHref;
 
-        echo "Created entity: $selfHref\n";
-
         $this->exists = true;
 
         $this->wasRecentlyCreated = true;
@@ -147,7 +141,7 @@ abstract class Model extends EloquentModel {
 
     public function save(array $options = []) {
         try {
-            parent::save($options);
+            return parent::save($options);
         } catch (ClientException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 409) {
                 throw (new ConstraintViolationException("Constraint violation", 409, $e))->setModel(
@@ -160,7 +154,7 @@ abstract class Model extends EloquentModel {
     }
 
     protected function performDeleteOnModel() {
-        $this->getConnection()->remove($this->attributes['_links']['self']['href']);
+        $this->getConnection()->remove($this->getLinkHref('self'));
 
         unset($this->attributes['_links']['self']);
         $this->exists = false;
@@ -185,8 +179,7 @@ abstract class Model extends EloquentModel {
         $model = new static();
         $id = $model->getIdFromLink($id);
         try {
-            $response = $model->getConnection()->get($model->_endpoint . "/{$id}");
-            $attributes = json_decode($response->getBody()->getContents(), true);
+            $attributes = $model->getConnection()->getJson($model->_endpoint . "/{$id}");
 
             $model->setRawAttributes((array) $attributes, true);
             $model->exists = true;
