@@ -1,0 +1,8 @@
+{
+    "title": "Another Sample Post Title",
+    "content": "This is the content of another sample post.",
+    "status": "PUBLISHED",
+    "createdAt": "2023-10-02T14:00:00Z",
+    "updatedAt": "2023-10-02T14:00:00Z",
+    "author": "users/1"
+}

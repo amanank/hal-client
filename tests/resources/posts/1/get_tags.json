@@ -1,0 +1,39 @@
+{
+  "_embedded": {
+    "tags": [
+      {
+        "name": "Technology",
+        "slug": "technology",
+        "createdAt": "2023-10-01T12:00:00Z",
+        "updatedAt": "2023-10-01T12:00:00Z",
+        "_links": {
+          "self": {
+            "href": "tags/1"
+          },
+          "tag": {
+            "href": "tags/1"
+          }
+        }
+      },
+      {
+        "name": "Science",
+        "slug": "science",
+        "createdAt": "2023-10-01T12:00:00Z",
+        "updatedAt": "2023-10-01T12:00:00Z",
+        "_links": {
+          "self": {
+            "href": "tags/2"
+          },
+          "tag": {
+            "href": "tags/2"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "posts/1/tags"
+    }
+  }
+}

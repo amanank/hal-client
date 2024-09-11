@@ -1,0 +1,49 @@
+{
+  "_embedded": {
+    "comments": [
+      {
+        "content": "This is the first comment on post 2.",
+        "createdAt": "2023-10-02T14:00:00Z",
+        "updatedAt": "2023-10-02T14:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/1"
+          },
+          "comment": {
+            "href": "comments/1"
+          },
+          "author": {
+            "href": "users/1"
+          },
+          "post": {
+            "href": "posts/2"
+          }
+        }
+      },
+      {
+        "content": "This is the second comment on post 2.",
+        "createdAt": "2023-10-02T15:00:00Z",
+        "updatedAt": "2023-10-02T15:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/2"
+          },
+          "comment": {
+            "href": "comments/2"
+          },
+          "author": {
+            "href": "users/2"
+          },
+          "post": {
+            "href": "posts/2"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "posts/2/comments"
+    }
+  }
+}

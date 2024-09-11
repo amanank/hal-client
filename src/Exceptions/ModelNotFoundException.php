@@ -18,7 +18,9 @@ class ModelNotFoundException extends Exception {
         $this->model = $model;
         $this->id = $id;
 
-        $this->message = "No results for GET model [{$model}] with id [{$id}].";
+        $name = class_basename($model);
+
+        $this->message = "Model [$name] with id [$id] not found.";
 
         return $this;
     }

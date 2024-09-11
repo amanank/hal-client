@@ -22,7 +22,9 @@ class ConstraintViolationException extends Exception {
         $this->model = $model;
         $this->id = $id;
 
-        $this->message = "Constraint violation for model [{$model}] with id [{$id}].";
+        $simpleName = class_basename($model);
+
+        $this->message = "Constraint violation for model [{$simpleName}] with id [{$id}].";
 
         return $this;
     }

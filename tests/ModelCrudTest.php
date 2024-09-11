@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Models\Discovered;
+namespace Tests;
 
 use Amanank\HalClient\Client;
 use Amanank\HalClient\Exceptions\ConstraintViolationException;
@@ -9,17 +9,15 @@ use Amanank\HalClient\Models\Discovered\Enums\UserStatusEnum;
 use Amanank\HalClient\Models\Discovered\User;
 use Orchestra\Testbench\TestCase;
 use Amanank\HalClient\Providers\HalClientServiceProvider;
-use Tests\MockAPI;
+use Tests\Helpers\MockAPI;
 
-class UserTest extends TestCase {
-    const MODEL_PATH = __DIR__ . '/../../../src/Models/Discovered';
+class ModelCrudTest extends TestCase {
 
     protected static $client;
 
     public static function setUpBeforeClass(): void {
         parent::setUpBeforeClass();
         self::$client = MockAPI::getClient();
-        include_once self::MODEL_PATH . '/User.php';
     }
 
 
@@ -35,6 +33,9 @@ class UserTest extends TestCase {
         ];
     }
 
+    /**
+     * Test Model::find with a valid user ID returns a user object
+     */
     public function testFindUserByIdReturnsUser() {
         $user = User::find(1);
         $this->assertNotNull($user);
@@ -45,18 +46,28 @@ class UserTest extends TestCase {
         $this->assertEquals('ACTIVE', $user->status->value);
     }
 
+    /**
+     * Test Model::find with a non-existent user ID returns null
+     */
     public function testFindUserByIdReturnsNullForNonExistentUser() {
         $user = User::find(100);
         $this->assertNull($user);
     }
 
+
+    /**
+     * Test Model::findOrFail with a non-existent user ID throws a ModelNotFoundException
+     */
     public function testFindOrFailThrowsExceptionForNonExistentUser() {
         $this->expectException(ModelNotFoundException::class);
-        $this->expectExceptionMessage("No results for GET model [" . User::class . "] with id [100].");
+        $this->expectExceptionMessage("Model [" . class_basename(User::class) . "] with id [100] not found.");
 
         User::findOrFail(100);
     }
 
+    /**
+     * Test Model::save creates a new user successfully
+     */
     public function testCreateUserSuccessfully() {
         $user = new User();
         $user->username = 'unit.test';
@@ -71,9 +82,12 @@ class UserTest extends TestCase {
         $this->assertEquals('users/9', $user->getLink());
     }
 
+    /**
+     * Test Model::save throws a ConstraintViolationException when a constraint is violated
+     */
     public function testCreateUserThrowsConstraintViolationException() {
         $this->expectException(ConstraintViolationException::class);
-        $this->expectExceptionMessage("Constraint violation for model [" . User::class . "] with id [].");
+        $this->expectExceptionMessage("Constraint violation for model [" . class_basename(User::class) . "] with id [].");
         $this->expectExceptionCode(409);
 
         try {
@@ -100,6 +114,9 @@ class UserTest extends TestCase {
         }
     }
 
+    /**
+     * Test Model::get returns a paginated list of users
+     */
     public function testGetUsersReturnsPaginatedList() {
         $usersPage = User::get();
 
@@ -110,6 +127,9 @@ class UserTest extends TestCase {
         $this->assertEquals(1, $usersPage->currentPage());
     }
 
+    /**
+     * Test Model::save updates an existing user successfully
+     */
     public function testUpdateUserSuccessfully() {
         // Assume we have a user with ID 1
         $user = User::find(1);
@@ -129,6 +149,9 @@ class UserTest extends TestCase {
         $this->assertFalse($user->isDirty());
     }
 
+    /**
+     * Test Model::save on existing user throws a ConstraintViolationException when a constraint is violated
+     */
     public function testUpdateUserThrowsConstraintViolationException() {
         // Assume we have a user with ID 1
         $user = User::find(1);
@@ -140,7 +163,7 @@ class UserTest extends TestCase {
         $user->firstName = 'conflict'; // This will trigger a 409 response
 
         $this->expectException(ConstraintViolationException::class);
-        $this->expectExceptionMessage("Constraint violation for model [" . User::class . "] with id [users/1].");
+        $this->expectExceptionMessage("Constraint violation for model [" . class_basename(User::class) . "] with id [users/1].");
         $this->expectExceptionCode(409);
 
         try {
@@ -158,5 +181,31 @@ class UserTest extends TestCase {
 
             throw $e;
         }
+    }
+
+    /**
+     * Test Model::delete deletes an existing user successfully
+     */
+    public function testDeleteUserSuccessfully() {
+        // Assume we have a user with ID 1
+        $user = User::findOrFail(1);
+
+        $this->assertTrue($user->delete());
+
+        $this->assertFalse($user->exists);
+    }
+
+    /**
+     * Test Model::delete on non-existent user throws a ModelNotFoundException
+     */
+    public function testDeleteUserThrowsModelNotFoundException() {
+        $this->expectException(ModelNotFoundException::class);
+        $this->expectExceptionMessage("Model [" . class_basename(User::class) . "] with id [users/100] not found.");
+
+        $user = new User();
+        $user->setRawAttributes(['_links' => ['self' => ['href' => 'users/100']]]);
+        $user->exists = true;
+
+        $user->delete();
     }
 }

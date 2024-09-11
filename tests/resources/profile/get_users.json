@@ -11,6 +11,7 @@
           { "name": "firstName", "type": "SEMANTIC" },
           { "name": "lastName", "type": "SEMANTIC" },
           { "name": "status", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "ACTIVE, INACTIVE, BANNED" } },
+          { "name": "posts", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/posts#post-representation" },
           { "name": "createdAt", "type": "SEMANTIC" },
           { "name": "updatedAt", "type": "SEMANTIC" }
         ]

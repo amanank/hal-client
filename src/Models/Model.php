@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Amanank\HalClient\Client;
 use Amanank\HalClient\Exceptions\ConstraintViolationException;
 use Amanank\HalClient\Exceptions\ModelNotFoundException;
+use Amanank\HalClient\Query\QueryBuilder;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -67,7 +68,7 @@ abstract class Model extends EloquentModel {
         $attributes = $this->getAttributes();
         unset($attributes['_links']);
         foreach ($attributes as $key => $value) {
-            if (is_object($value) && method_exists($value, 'getSelfLink')) {
+            if (is_object($value) && method_exists($value, 'getLink')) {
                 $attributes[$key] = $value->getLink();
             } elseif ($value instanceof Collection) {
                 $attributes[$key] = $value->map(fn($item) => $item->getLink())->toArray();
@@ -91,6 +92,7 @@ abstract class Model extends EloquentModel {
         $dirty = $this->getDirty();
 
         if (count($dirty) > 0) {
+
             $this->getConnection()->update($this->getLinkHref('self'), $this->getAttributesForSave());
 
             $this->syncChanges();
@@ -154,7 +156,17 @@ abstract class Model extends EloquentModel {
     }
 
     protected function performDeleteOnModel() {
-        $this->getConnection()->remove($this->getLinkHref('self'));
+        try {
+            $this->getConnection()->remove($this->getLinkHref('self'));
+        } catch (ClientException $e) {
+            if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
+                throw (new ModelNotFoundException("Model not found", 404, $e))->setModel(
+                    get_class($this),
+                    $this->getLink()
+                );
+            }
+            throw $e;
+        }
 
         unset($this->attributes['_links']['self']);
         $this->exists = false;
@@ -207,7 +219,7 @@ abstract class Model extends EloquentModel {
     }
 
     public function newModelQuery() {
-        return null; //query is not supported
+        return new QueryBuilder();
     }
 
     public static function get($page = null, $size = null, $sort = null): LengthAwarePaginator {

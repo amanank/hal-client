@@ -1,17 +1,17 @@
 <?php
 
-namespace Tests\Console\Commands;
+namespace Tests;
 
 use Amanank\HalClient\Client;
 use Orchestra\Testbench\TestCase;
 use Amanank\HalClient\Providers\HalClientServiceProvider;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
-use Tests\MockAPI;
+use Tests\Helpers\MockAPI;
 
 class GenerateHalModelsTest extends TestCase {
 
-    const MODEL_PATH = __DIR__ . '/../../../src/Models/Discovered';
+    const MODEL_PATH = __DIR__ . '/../src/Models/Discovered';
     const FILES_TO_TEST = [
         'User.php',
         'Tag.php',
@@ -79,7 +79,7 @@ class GenerateHalModelsTest extends TestCase {
         }
 
         $this->assertInstanceOf(\Amanank\HalClient\Models\Model::class, $user);
-        $this->assertEquals(['username', 'email', 'firstName', 'lastName', 'status', 'createdAt', 'updatedAt'], $user->getFillable());
+        $this->assertEquals(['username', 'email', 'firstName', 'lastName', 'status', 'posts', 'createdAt', 'updatedAt'], $user->getFillable());
     }
 
     protected function cleanModelPath() {
