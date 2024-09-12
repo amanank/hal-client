@@ -16,6 +16,7 @@ class HalTestSuite extends TestSuite {
         // Add other test classes
         $suite->addTestSuite(ModelCrudTest::class);
         $suite->addTestSuite(ModelRelationHalHasOneTest::class);
+        $suite->addTestSuite(ModelRelationHalHasManyTest::class);
         // Add more test classes as needed
 
         return $suite;

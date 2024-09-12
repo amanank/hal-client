@@ -1,0 +1,12 @@
+{
+  "_embedded": {
+    "tags": [
+
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "posts/2/tags"
+    }
+  }
+}

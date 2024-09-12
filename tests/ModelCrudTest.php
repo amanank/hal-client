@@ -102,13 +102,13 @@ class ModelCrudTest extends TestCase {
         } catch (ConstraintViolationException $e) {
             $this->assertEquals(User::class, $e->getModel());
             $this->assertNull($e->getId());
-            $this->assertNotNull($e->getResponse());
+            $this->assertNotNull($e->getErrors());
 
-            $this->assertEquals('CONFLICT', $e->getResponse()['status']);
-            $this->assertEquals('Unique index or primary key violation', $e->getResponse()['message']);
-            $this->assertEquals('User', $e->getResponse()['subErrors'][0]['object']);
-            $this->assertEquals('email', $e->getResponse()['subErrors'][0]['field']);
-            $this->assertEquals('Email must be unique.', $e->getResponse()['subErrors'][0]['message']);
+            $this->assertEquals('CONFLICT', $e->getErrors()['status']);
+            $this->assertEquals('Unique index or primary key violation', $e->getErrors()['message']);
+            $this->assertEquals('User', $e->getErrors()['subErrors'][0]['object']);
+            $this->assertEquals('email', $e->getErrors()['subErrors'][0]['field']);
+            $this->assertEquals('Email must be unique.', $e->getErrors()['subErrors'][0]['message']);
 
             throw $e;
         }
@@ -171,13 +171,13 @@ class ModelCrudTest extends TestCase {
         } catch (ConstraintViolationException $e) {
             $this->assertEquals(User::class, $e->getModel());
             $this->assertEquals("users/1", $e->getId());
-            $this->assertNotNull($e->getResponse());
+            $this->assertNotNull($e->getErrors());
 
-            $this->assertEquals('CONFLICT', $e->getResponse()['status']);
-            $this->assertEquals('Unique index or primary key violation', $e->getResponse()['message']);
-            $this->assertEquals('User', $e->getResponse()['subErrors'][0]['object']);
-            $this->assertEquals('email', $e->getResponse()['subErrors'][0]['field']);
-            $this->assertEquals('Email must be unique.', $e->getResponse()['subErrors'][0]['message']);
+            $this->assertEquals('CONFLICT', $e->getErrors()['status']);
+            $this->assertEquals('Unique index or primary key violation', $e->getErrors()['message']);
+            $this->assertEquals('User', $e->getErrors()['subErrors'][0]['object']);
+            $this->assertEquals('email', $e->getErrors()['subErrors'][0]['field']);
+            $this->assertEquals('Email must be unique.', $e->getErrors()['subErrors'][0]['message']);
 
             throw $e;
         }
@@ -208,4 +208,8 @@ class ModelCrudTest extends TestCase {
 
         $user->delete();
     }
+
+    /**
+     * TODO: Test Model::all returns a collection of all users
+     */
 }

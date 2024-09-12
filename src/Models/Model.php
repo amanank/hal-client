@@ -63,9 +63,19 @@ abstract class Model extends EloquentModel {
         return new HalHasMany($this, $related, $link, $property);
     }
 
+    protected static function isSelfRelation($relationName) {
+        return $relationName == 'self' || $relationName == lcfirst(class_basename(static::class));
+    }
 
     public function getAttributesForSave() {
         $attributes = $this->getAttributes();
+
+        foreach ($attributes['_links'] ?? [] as $relationName => $link) { //load all relations that were not touched
+            if (!static::isSelfRelation($relationName) && !isset($attributes[$relationName])) {
+                $attributes[$relationName] = $this->$relationName;
+            }
+        }
+
         unset($attributes['_links']);
         foreach ($attributes as $key => $value) {
             if (is_object($value) && method_exists($value, 'getLink')) {
@@ -73,6 +83,7 @@ abstract class Model extends EloquentModel {
             } elseif ($value instanceof Collection) {
                 $attributes[$key] = $value->map(fn($item) => $item->getLink())->toArray();
             }
+
         }
 
         return $attributes;

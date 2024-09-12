@@ -1,0 +1,19 @@
+{
+    "content": "This is the third comment on post 2.",
+    "createdAt": "2023-10-02T16:00:00Z",
+    "updatedAt": "2023-10-02T16:00:00Z",
+    "_links": {
+        "self": {
+            "href": "comments/3"
+        },
+        "comment": {
+            "href": "comments/3"
+        },
+        "author": {
+            "href": "comments/3/user"
+        },
+        "post": {
+            "href": "comments/3/post"
+        }
+    }
+}

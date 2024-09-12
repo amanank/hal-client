@@ -1,0 +1,17 @@
+{
+    "title": "Third Sample Post Title",
+    "content": "This is the content of the third sample post.",
+    "status": "DRAFT",
+    "createdAt": "2023-10-03T10:00:00Z",
+    "updatedAt": "2023-10-03T10:00:00Z",
+    "author": "users/3",
+    "comments": [
+        "comments/4",
+        "comments/5",
+        "comments/6",
+        "comments/7",
+        "comments/8",
+        "comments/3"
+    ],
+    "tags": []
+}

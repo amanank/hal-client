@@ -8,6 +8,7 @@ use Amanank\HalClient\Models\Discovered\Post;
 use Amanank\HalClient\Models\Discovered\User;
 use Orchestra\Testbench\TestCase;
 use Amanank\HalClient\Providers\HalClientServiceProvider;
+use PHPUnit\Framework\Constraint\Constraint;
 use Tests\Helpers\MockAPI;
 
 class ModelRelationHalHasOneTest extends TestCase {
@@ -39,6 +40,7 @@ class ModelRelationHalHasOneTest extends TestCase {
         $post = Post::findOrFail(1);
         $author = $post->author;
 
+
         $this->assertNotNull($author);
         $this->assertEquals('john.doe', $author->username);
         $this->assertEquals('users/1', $author->getLink());
@@ -65,7 +67,12 @@ class ModelRelationHalHasOneTest extends TestCase {
 
         $this->assertEquals($author, $post->author);
 
-        $this->assertTrue($post->save());
+        try {
+            $this->assertTrue($post->save());
+        } catch (ConstraintViolationException $e) {
+            print_r($e->getErrors());
+            throw $e;
+        }
     }
 
     /**
@@ -80,7 +87,12 @@ class ModelRelationHalHasOneTest extends TestCase {
 
         $this->assertNull($post->author);
 
-        $this->assertTrue($post->save());
+        try {
+            $this->assertTrue($post->save());
+        } catch (ConstraintViolationException $e) {
+            print_r($e->getErrors());
+            throw $e;
+        }
     }
 
     /**
@@ -95,4 +107,8 @@ class ModelRelationHalHasOneTest extends TestCase {
 
         $post->save();
     }
+
+    /**
+     * TODO: Test HalHasOne::save is successful when updating model without changing the relation (and without getting the related model)
+     */
 }

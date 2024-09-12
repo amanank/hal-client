@@ -1,0 +1,106 @@
+{
+  "_embedded": {
+    "comments": [
+      {
+        "content": "This is the first comment on post 3.",
+        "createdAt": "2023-10-03T10:00:00Z",
+        "updatedAt": "2023-10-03T10:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/4"
+          },
+          "comment": {
+            "href": "comments/4"
+          },
+          "author": {
+            "href": "comments/4/user"
+          },
+          "post": {
+            "href": "comments/4/post"
+          }
+        }
+      },
+      {
+        "content": "This is the second comment on post 3.",
+        "createdAt": "2023-10-03T11:00:00Z",
+        "updatedAt": "2023-10-03T11:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/5"
+          },
+          "comment": {
+            "href": "comments/5"
+          },
+          "author": {
+            "href": "comments/5/user"
+          },
+          "post": {
+            "href": "comments/5/post"
+          }
+        }
+      },
+      {
+        "content": "This is the third comment on post 3.",
+        "createdAt": "2023-10-03T12:00:00Z",
+        "updatedAt": "2023-10-03T12:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/6"
+          },
+          "comment": {
+            "href": "comments/6"
+          },
+          "author": {
+            "href": "comments/6/user"
+          },
+          "post": {
+            "href": "comments/6/post"
+          }
+        }
+      },
+      {
+        "content": "This is the fourth comment on post 3.",
+        "createdAt": "2023-10-03T13:00:00Z",
+        "updatedAt": "2023-10-03T13:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/7"
+          },
+          "comment": {
+            "href": "comments/7"
+          },
+          "author": {
+            "href": "comments/7/user"
+          },
+          "post": {
+            "href": "comments/7/post"
+          }
+        }
+      },
+      {
+        "content": "This is the fifth comment on post 3.",
+        "createdAt": "2023-10-03T14:00:00Z",
+        "updatedAt": "2023-10-03T14:00:00Z",
+        "_links": {
+          "self": {
+            "href": "comments/8"
+          },
+          "comment": {
+            "href": "comments/8"
+          },
+          "author": {
+            "href": "comments/8/user"
+          },
+          "post": {
+            "href": "comments/8/post"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "posts/3/comments"
+    }
+  }
+}

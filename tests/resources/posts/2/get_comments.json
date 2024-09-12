@@ -13,10 +13,10 @@
             "href": "comments/1"
           },
           "author": {
-            "href": "users/1"
+            "href": "comments/1/user"
           },
           "post": {
-            "href": "posts/2"
+            "href": "comments/1/post"
           }
         }
       },
@@ -32,10 +32,10 @@
             "href": "comments/2"
           },
           "author": {
-            "href": "users/2"
+            "href": "comments/2/user"
           },
           "post": {
-            "href": "posts/2"
+            "href": "comments/1/post"
           }
         }
       }
