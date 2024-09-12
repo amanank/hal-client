@@ -29,9 +29,9 @@ After installing the package, you need to register the `HalClientServiceProvider
 ],
 ```
 
-### 3. Configure `halt-client.php`
+### 3. Configure `hal-client.php`
 
-After registering the service provider, you need to configure it. Create a configuration file named `halt-client.php` in your `config` directory with the following content:
+After registering the service provider, you need to configure it. Create a configuration file named `hal-client.php` in your `config` directory with the following content:
 
 ```php
 return [
