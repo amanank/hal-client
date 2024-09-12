@@ -37,7 +37,7 @@ class HalClientServiceProvider extends ServiceProvider {
      */
     public function boot() {
         // Optional: Publish the configuration file
-        $this->publishes([self::CONFIG_PATH => config_path(self::CONFIG_KEY . '.php')]);
+        $this->publishes([self::CONFIG_PATH => config_path(self::CONFIG_KEY . '.php')], 'config');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
