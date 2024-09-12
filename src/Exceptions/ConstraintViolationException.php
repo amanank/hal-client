@@ -8,13 +8,13 @@ use GuzzleHttp\Exception\ClientException;
 class ConstraintViolationException extends Exception {
 
     protected $model;
-    protected $response;
+    protected $errors;
     protected $id;
 
     public function __construct($message = "Constraint violation", $code = 409, ClientException $previous = null) {
         parent::__construct($message, $code, $previous);
-        if ($previous && $previous->hasResponse() && $previous->getResponse()->getBody()) {
-            $this->response = json_decode($previous->getResponse()->getBody()->getContents(), true);
+        if ($previous && $previous->hasResponse()) {
+            $this->errors = json_decode($previous->getResponse()->getBody()->getContents(), true);
         }
     }
 
@@ -22,7 +22,9 @@ class ConstraintViolationException extends Exception {
         $this->model = $model;
         $this->id = $id;
 
-        $this->message = "Constraint violation for model [{$model}] with id [{$id}].";
+        $simpleName = class_basename($model);
+
+        $this->message = "Constraint violation for model [{$simpleName}] with id [{$id}].";
 
         return $this;
     }
@@ -35,7 +37,7 @@ class ConstraintViolationException extends Exception {
         return $this->id;
     }
 
-    public function getResponse() {
-        return $this->response;
+    public function getErrors() {
+        return $this->errors;
     }
 }

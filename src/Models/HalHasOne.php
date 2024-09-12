@@ -72,6 +72,11 @@ class HalHasOne extends BelongsTo {
         return $this->entity;
     }
 
+    public function dissociate() {
+        $this->entity->setAttribute($this->relationsName, null);
+        return $this->entity->setRelation($this->relationName, null);
+    }
+
     public function addConstraints() {
         throw new \Exception('Constraints not supported for HalHasOne relation');
     }

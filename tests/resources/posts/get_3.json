@@ -1,0 +1,24 @@
+{
+    "title": "Third Sample Post Title",
+    "content": "This is the content of the third sample post.",
+    "status": "DRAFT",
+    "createdAt": "2023-10-03T10:00:00Z",
+    "updatedAt": "2023-10-03T10:00:00Z",
+    "_links": {
+        "self": {
+            "href": "posts/3"
+        },
+        "post": {
+            "href": "posts/3"
+        },
+        "author": {
+            "href": "posts/3/author"
+        },
+        "tags": {
+            "href": "posts/3/tags"
+        },
+        "comments": {
+            "href": "posts/3/comments"
+        }
+    }
+}

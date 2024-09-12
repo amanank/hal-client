@@ -1,0 +1,24 @@
+{
+    "title": "Another Sample Post Title",
+    "content": "This is the content of another sample post.",
+    "status": "PUBLISHED",
+    "createdAt": "2023-10-02T14:00:00Z",
+    "updatedAt": "2023-10-02T14:00:00Z",
+    "_links": {
+        "self": {
+            "href": "posts/2"
+        },
+        "post": {
+            "href": "posts/2"
+        },
+        "author": {
+            "href": "posts/2/author"
+        },
+        "tags": {
+            "href": "posts/2/tags"
+        },
+        "comments": {
+            "href": "posts/2/comments"
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "_embedded": {
+    "comments": [
+
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "posts/2/comments"
+    }
+  }
+}

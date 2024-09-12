@@ -10,6 +10,7 @@
           { "name": "content", "type": "SEMANTIC" },
           { "name": "author", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/users#user-representation" },
           { "name": "tags", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/tags#tag-representation" },
+          { "name": "comments", "type": "SAFE", "rt": "https://mockapi.example.com/api/v1/profile/comments#comment-representation" },
           { "name": "status", "type": "SEMANTIC", "doc": { "format": "TEXT", "value": "DRAFT, PUBLISHED, ARCHIVED" } },
           { "name": "createdAt", "type": "SEMANTIC" },
           { "name": "updatedAt", "type": "SEMANTIC" }
