@@ -39,7 +39,7 @@
         },
         "laravel": {
             "providers": [
-                "Amanank\\HalClient\\Amanank\\Providers\\HalClientServiceProvider"
+                "Amanank\\HalClient\\Providers\\HalClientServiceProvider"
             ]
         }
     },
