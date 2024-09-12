@@ -17,17 +17,17 @@ If you haven't already, make sure to include the Composer autoload file in your 
 require 'vendor/autoload.php';
 ```
 
-### 2. Register the Service Provider
-
-After installing the package, you need to register the `HalClientServiceProvider`. Open your `config/app.php` file and add the service provider to the `providers` array:
+### 2. Publish the Configuration File
+After installing the package, you can publish the configuration file using the following Artisan command:
 
 ```php
-'providers' => [
-    // Other Service Providers
-
-    Amanank\HalClient\HalClientServiceProvider::class,
-],
+php artisan vendor:publish --tag=config --provider="Amanank\HalClient\Providers\HalClientServiceProvider"
 ```
+
+This will create a configuration file named `hal-client.php` in your `config` directory.
+
+#### Note
+Laravel's auto-discovery feature will automatically register the `HalClientServiceProvider` for you. You do not need to manually register it in your `config/app.php` file.
 
 ### 3. Configure `hal-client.php`
 
@@ -35,7 +35,7 @@ After registering the service provider, you need to configure it. Create a confi
 
 ```php
 return [
-    'base_uri' => env('HAL_API_BASE_URI', 'https://api.example.com'),
+    'base_uri' => env('HAL_API_BASE_URI', 'https://example.com/api/v1/'),
     'headers' => [
         'Authorization' => 'Bearer ' . env('HAL_API_TOKEN'),
         'Accept' => 'application/hal+json',

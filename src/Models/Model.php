@@ -249,8 +249,8 @@ abstract class Model extends EloquentModel {
             return null;
         }
 
-        if (is_array($attributes) && isset($attributes['_embedded'])) {
-            return static::formatEmbededResponse($attributes['_embedded']);
+        if (is_array($attributes) && isset($attributes['_embedded'], $attributes['_embedded'][$model->_endpoint])) {
+            return static::formatEmbededResponse($attributes['_embedded'][$model->_endpoint]);
         } else if (is_scalar($attributes)) {
             return $attributes;
         } else {
