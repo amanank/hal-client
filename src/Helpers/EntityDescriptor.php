@@ -151,7 +151,7 @@ class EntityDescriptor {
         $functionParams = collect($item['params'])->map(fn($attr) => "\${$attr}")->implode(', ');
         $searchParams = collect($item['params'])->map(fn($attr) => "'{$attr}' => \${$attr}")->implode(', ');
 
-        return "public static function {$item['functionName']}($functionParams){$item['returnType']} {\n\t\treturn static::search('{$item['functionName']}', [{$searchParams}]);\n\t}";
+        return "public static function {$item['functionName']}($functionParams){$item['returnType']} {\n\t\treturn static::halSearch('{$item['functionName']}', [{$searchParams}]);\n\t}";
     }
 
     protected function getEnumSetter($enum): string {

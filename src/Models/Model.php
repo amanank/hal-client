@@ -241,7 +241,7 @@ abstract class Model extends EloquentModel {
         return new LengthAwarePaginator($models, $response['page']['totalElements'], $response['page']['size'], $response['page']['number']);
     }
 
-    protected static function search($method, $params) {
+    protected static function halSearch($method, $params) {
         $model = new static();
         $attributes = $model->getConnection()->getJson($model->_endpoint . "/search/{$method}", ['query' => $params]);
 
