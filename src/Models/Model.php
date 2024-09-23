@@ -49,16 +49,28 @@ abstract class Model extends EloquentModel {
         return "{$this->_endpoint}/{$this->getId()}";
     }
 
+    protected function getManyRelation() {
+        return $this->hasMany(static::class, 'self');
+    }
+
     protected function getLinkHref($rel) {
         return isset($this->attributes['_links'][$rel]) ? $this->attributes['_links'][$rel]['href'] : null;
     }
 
+    protected function getRaltedUnderCurrentNamespace($related) {
+        $namespace = substr(get_class($this), 0, strrpos(static::class, '\\'));
+        $relatedClass = "$namespace\\" . class_basename($related);
+        return class_exists($relatedClass) ? $relatedClass : $related;
+    }
+
     public function hasOne($related, $property = null, $localKey = null) {
+        $related = $this->getRaltedUnderCurrentNamespace($related);
         $link = $this->getLinkHref($property);
         return new HalHasOne($this, $related, $link, $property);
     }
 
     public function hasMany($related, $property = null, $localKey = null) {
+        $related = $this->getRaltedUnderCurrentNamespace($related);
         $link = $this->getLinkHref($property);
         return new HalHasMany($this, $related, $link, $property);
     }

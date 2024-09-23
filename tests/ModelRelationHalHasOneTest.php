@@ -8,8 +8,8 @@ use Amanank\HalClient\Models\Discovered\Post;
 use Amanank\HalClient\Models\Discovered\User;
 use Orchestra\Testbench\TestCase;
 use Amanank\HalClient\Providers\HalClientServiceProvider;
-use PHPUnit\Framework\Constraint\Constraint;
 use Tests\Helpers\MockAPI;
+use Tests\Models\Post as ModelsPost;
 
 class ModelRelationHalHasOneTest extends TestCase {
 
@@ -106,6 +106,18 @@ class ModelRelationHalHasOneTest extends TestCase {
         $post->author()->dissociate();
 
         $post->save();
+    }
+
+    public function testExtendedModelHasOne() {
+        $post = ModelsPost::findOrFail(1);
+
+        $this->assertEquals('Tests\Models\Post', get_class($post));
+
+        $author = $post->author;
+
+        $this->assertNotNull($author);
+        //assert namesapce of author is Tests\Models\User
+        $this->assertEquals('Tests\Models\User', get_class($author));
     }
 
     /**
