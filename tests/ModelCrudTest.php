@@ -65,6 +65,11 @@ class ModelCrudTest extends TestCase {
         User::findOrFail(100);
     }
 
+    public function testGetEnumOnNewUser() {
+        $user = new User();
+        $this->assertNull($user->status);
+    }
+
     /**
      * Test Model::save creates a new user successfully
      */

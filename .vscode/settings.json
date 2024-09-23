@@ -20,5 +20,8 @@
     "phpunit.command": "docker exec -t php /bin/sh -c",
     "intelephense.environment.includePaths": [
         "vendor/**"
-    ]
+    ],
+     "phpunit.paths": {
+            "${workspaceFolder}": "/app/"
+        }
 }
