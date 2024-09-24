@@ -168,8 +168,8 @@ abstract class Model extends EloquentModel {
         try {
             return parent::save($options);
         } catch (ClientException $e) {
-            if ($e->getResponse() && $e->getResponse()->getStatusCode() == 409) {
-                throw (new ConstraintViolationException("Constraint violation", 409, $e))->setModel(
+            if ($e->getResponse() && ($e->getResponse()->getStatusCode() == 409 || $e->getResponse()->getStatusCode() == 400)) {
+                throw (new ConstraintViolationException("Constraint violation", $e->getResponse()->getStatusCode(), $e))->setModel(
                     get_class($this),
                     $this->exists ? $this->getLink() : null
                 );
