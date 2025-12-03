@@ -49,6 +49,18 @@ abstract class Model extends EloquentModel {
         return "{$this->_endpoint}/{$this->getId()}";
     }
 
+    public function getKey() {
+        try {
+            return $this->getId();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function getRouteKey() {
+        return (string) $this->getKey();
+    }
+
     protected function getManyRelation() {
         return $this->hasMany(static::class, 'self');
     }
@@ -242,7 +254,7 @@ abstract class Model extends EloquentModel {
     }
 
     public function newModelQuery() {
-        return new QueryBuilder();
+        return new \Amanank\HalClient\Query\HalEloquentBuilder(static::class);
     }
 
     public static function get($page = null, $size = null, $sort = null): LengthAwarePaginator {
