@@ -1,5 +1,5 @@
 # HAL API Client
-A PHP client for interacting with HAL APIs.
+A PHP client for interacting with HAL APIs. Tested with Laravel 8–12.
 
 ## Installation
 
@@ -27,7 +27,7 @@ php artisan vendor:publish --tag=config --provider="Amanank\HalClient\Providers\
 This will create a configuration file named `hal-client.php` in your `config` directory.
 
 #### Note
-Laravel's auto-discovery feature will automatically register the `HalClientServiceProvider` for you. You do not need to manually register it in your `config/app.php` file.
+Laravel's auto-discovery feature will automatically register the `HalClientServiceProvider` for you. You do not need to manually register it in your `config/app.php` file. For local development in this monorepo, the package is available via a path repository (`packages/*/*`) with symlinks enabled, so you can edit the package in place; in CI/prod, Composer will fall back to Packagist.
 
 ### 3. Configure `hal-client.php`
 
