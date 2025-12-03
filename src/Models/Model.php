@@ -259,10 +259,27 @@ abstract class Model extends EloquentModel {
 
     public static function get($page = null, $size = null, $sort = null): LengthAwarePaginator {
         $model = new static();
-        $response = $model->getConnection()->getJson($model->_endpoint, ['query' => compact('page', 'size', 'sort')]);
+
+        // API is 0-based; Laravel pagination is 1-based.
+        $apiPage = max(($page ?? 1) - 1, 0);
+        $apiSize = $size ?? 15;
+
+        $response = $model->getConnection()->getJson($model->_endpoint, [
+            'query' => [
+                'page' => $apiPage,
+                'size' => $apiSize,
+                'sort' => $sort,
+            ],
+        ]);
+
         $models = static::formatEmbededResponse($response['_embedded'][$model->_endpoint]);
 
-        return new LengthAwarePaginator($models, $response['page']['totalElements'], $response['page']['size'], $response['page']['number']);
+        return new LengthAwarePaginator(
+            $models,
+            $response['page']['totalElements'],
+            $response['page']['size'],
+            $apiPage + 1,
+        );
     }
 
     protected static function halSearch($method, $params) {

@@ -76,7 +76,7 @@ class HalQueryBuilder
 
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null): LengthAwarePaginator
     {
-        $page = $page ?? request()->input($pageName, 1);
+        $page = $page ?? \Illuminate\Pagination\Paginator::resolveCurrentPage($pageName);
         $perPage = $perPage ?? 15;
 
         return $this->modelClass::get($page, $perPage, $this->sort);
