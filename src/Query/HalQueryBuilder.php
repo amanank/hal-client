@@ -9,6 +9,7 @@ class HalQueryBuilder
 {
     protected string $modelClass;
     protected ?string $sort = null;
+    protected array $searchTerms = [];
 
     public function __construct(string $modelClass)
     {
@@ -23,7 +24,21 @@ class HalQueryBuilder
 
     public function where(...$args): static
     {
-        // Filtering not yet supported; no-op to keep compatibility.
+        if (isset($args[0]) && is_callable($args[0])) {
+            $callback = $args[0];
+            $callback($this);
+            return $this;
+        }
+
+        $this->captureSearchTermFromArgs($args);
+
+        return $this;
+    }
+
+    public function orWhere(...$args): static
+    {
+        $this->captureSearchTermFromArgs($args);
+
         return $this;
     }
 
@@ -79,6 +94,16 @@ class HalQueryBuilder
         $page = $page ?? \Illuminate\Pagination\Paginator::resolveCurrentPage($pageName);
         $perPage = $perPage ?? 15;
 
+        if (! empty($this->searchTerms) && method_exists($this->modelClass, 'searchByTerm')) {
+            $term = $this->searchTerms[0];
+            $results = $this->modelClass::searchByTerm($term);
+            $collection = $results instanceof \Illuminate\Support\Collection ? $results : collect($results);
+            $total = $collection->count();
+            $items = $collection->forPage($page, $perPage)->values();
+
+            return new LengthAwarePaginator($items, $total, $perPage, $page);
+        }
+
         return $this->modelClass::get($page, $perPage, $this->sort);
     }
 
@@ -102,6 +127,25 @@ class HalQueryBuilder
     {
         $class = $this->modelClass;
         return new $class();
+    }
+
+    protected function captureSearchTermFromArgs(array $args): void
+    {
+        // Common patterns: where('column', 'like', '%term%') or where(function($q) use ($term) { ... }).
+        if (count($args) >= 3 && is_string($args[2])) {
+            $value = trim($args[2], '%');
+            if ($value !== '') {
+                $this->searchTerms[] = $value;
+            }
+            return;
+        }
+
+        if (count($args) >= 2 && is_string($args[1])) {
+            $value = trim($args[1], '%');
+            if ($value !== '') {
+                $this->searchTerms[] = $value;
+            }
+        }
     }
 }
 

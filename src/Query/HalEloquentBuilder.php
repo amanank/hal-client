@@ -36,6 +36,26 @@ class HalEloquentBuilder extends Builder
 
     public function where(...$args)
     {
+        if (isset($args[0]) && is_callable($args[0])) {
+            // Filament filters receive the Eloquent Builder; pass $this to satisfy the signature.
+            $callback = $args[0];
+            $callback($this);
+            return $this;
+        }
+
+        $this->hal->where(...$args);
+        return $this;
+    }
+
+    public function orWhere(...$args)
+    {
+        if (isset($args[0]) && is_callable($args[0])) {
+            $callback = $args[0];
+            $callback($this);
+            return $this;
+        }
+
+        $this->hal->orWhere(...$args);
         return $this;
     }
 
@@ -73,6 +93,12 @@ class HalEloquentBuilder extends Builder
     public function get($columns = ['*'])
     {
         return $this->hal->paginate(null, $columns)->getCollection();
+    }
+
+    public function getConnection()
+    {
+        // Return a dummy connection that satisfies Filament's expectation for search helpers.
+        return app('db')->connection();
     }
 
     public function first($columns = ['*'])
