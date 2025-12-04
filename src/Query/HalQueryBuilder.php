@@ -4,12 +4,15 @@ namespace Amanank\HalClient\Query;
 
 use Amanank\HalClient\Models\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class HalQueryBuilder
 {
     protected string $modelClass;
     protected ?string $sort = null;
     protected array $searchTerms = [];
+    protected ?string $parentId = null;
 
     public function __construct(string $modelClass)
     {
@@ -19,6 +22,13 @@ class HalQueryBuilder
     public function orderBy($column, $direction = 'asc'): static
     {
         $this->sort = "{$column},{$direction}";
+        return $this;
+    }
+
+    public function setParentId(?string $parentId): static
+    {
+        $this->parentId = $parentId;
+
         return $this;
     }
 
@@ -93,6 +103,26 @@ class HalQueryBuilder
     {
         $page = $page ?? \Illuminate\Pagination\Paginator::resolveCurrentPage($pageName);
         $perPage = $perPage ?? 15;
+
+        if ($this->parentId && method_exists($this->modelClass, 'findChildrenByParentId')) {
+            $results = $this->modelClass::findChildrenByParentId($this->parentId);
+            $collection = $results instanceof Collection ? $results : collect($results);
+
+            if (! empty($this->searchTerms)) {
+                $term = Str::lower($this->searchTerms[0]);
+                $collection = $collection->filter(function ($cat) use ($term) {
+                    $name = Str::lower((string) ($cat->name ?? ''));
+                    $slug = Str::lower((string) ($cat->slug ?? ''));
+                    $code = Str::lower((string) ($cat->code ?? ''));
+                    return Str::contains($name, $term) || Str::contains($slug, $term) || Str::contains($code, $term);
+                });
+            }
+
+            $total = $collection->count();
+            $items = $collection->forPage($page, $perPage)->values();
+
+            return new LengthAwarePaginator($items, $total, $perPage, $page);
+        }
 
         if (! empty($this->searchTerms) && method_exists($this->modelClass, 'searchByTerm')) {
             $term = $this->searchTerms[0];

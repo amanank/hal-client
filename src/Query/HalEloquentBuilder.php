@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 class HalEloquentBuilder extends Builder
 {
     protected HalQueryBuilder $hal;
+    public array $orders = [];
 
     public function __construct(string $modelClass)
     {
@@ -59,6 +60,21 @@ class HalEloquentBuilder extends Builder
         return $this;
     }
 
+    public function whereBelongsTo($related, $relationshipName = null, $boolean = 'and')
+    {
+        if (is_object($related) && method_exists($related, 'getId')) {
+            $this->hal->setParentId($related->getId());
+        }
+
+        return $this;
+    }
+
+    public function withParentId($parentId): static
+    {
+        $this->hal->setParentId($parentId ? (string) $parentId : null);
+        return $this;
+    }
+
     public function whereIn(...$args)
     {
         return $this;
@@ -77,9 +93,11 @@ class HalEloquentBuilder extends Builder
     public function toBase()
     {
         // Return a lightweight object that supplies the count for Filament pagination.
-        return new class($this->hal)
+        return new class($this->hal, $this->getModel())
         {
-            public function __construct(protected HalQueryBuilder $hal)
+            public array $orders = [];
+
+            public function __construct(protected HalQueryBuilder $hal, protected \Illuminate\Database\Eloquent\Model $model)
             {
             }
 
@@ -87,7 +105,19 @@ class HalEloquentBuilder extends Builder
             {
                 return $this->hal->count();
             }
+
+            public function getModel(): \Illuminate\Database\Eloquent\Model
+            {
+                return $this->model;
+            }
         };
+    }
+
+    public function getQuery()
+    {
+        // Provide orders + model access like a typical Eloquent Builder.
+        $this->orders ??= [];
+        return $this;
     }
 
     public function get($columns = ['*'])
