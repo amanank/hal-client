@@ -16,6 +16,7 @@ class HalEloquentBuilder extends Builder
     public function __construct(string $modelClass)
     {
         $this->hal = new HalQueryBuilder($modelClass);
+        $this->orders = [];
 
         $connection = DB::connection();
         $query = new BaseQueryBuilder(
@@ -177,5 +178,14 @@ class HalEloquentBuilder extends Builder
     {
         // Gracefully ignore unsupported builder methods to retain compatibility with Filament.
         return $this;
+    }
+
+    public function __get($key)
+    {
+        if ($key === 'orders') {
+            return $this->orders;
+        }
+
+        return parent::__get($key);
     }
 }

@@ -45,6 +45,12 @@ class HalHasMany extends Relation {
         }
     }
 
+    public function getQuery() {
+        // Provide a builder interface for consumers expecting Eloquent relations.
+        return (new \Amanank\HalClient\Query\HalEloquentBuilder($this->related))
+            ->withParentId($this->entity->getId());
+    }
+
     public function associate($model) {
         if (is_null($model)) {
             Log::error('Attempted to associate a null model.');
