@@ -4,6 +4,7 @@ namespace Amanank\HalClient;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Facades\Log;
 
 class Client {
     private $client;
@@ -95,10 +96,31 @@ class Client {
     public function put($uri, $data = [], $options = []) {
         try {
             $options['json'] = $data;
+
+            // Helpful debug when upstream rejects payloads.
+            Log::debug('HAL PUT request', [
+                'uri' => $uri,
+                'payload' => $data,
+            ]);
+
             $response = $this->client->request('PUT', $uri, $options);
             return $response;
         } catch (RequestException $e) {
-            // Handle exception or rethrow
+            // Capture request/response context for the exception handler.
+            app()->instance('guzzle.debug.context', [
+                'guzzle_request' => [
+                    'method' => $e->getRequest()?->getMethod(),
+                    'uri' => (string) ($e->getRequest()?->getUri()),
+                    'headers' => $e->getRequest()?->getHeaders(),
+                    'body' => $e->getRequest() ? (string) $e->getRequest()->getBody() : null,
+                ],
+                'guzzle_response' => [
+                    'status' => $e->getResponse()?->getStatusCode(),
+                    'headers' => $e->getResponse()?->getHeaders(),
+                    'body' => $e->getResponse() ? (string) $e->getResponse()->getBody() : null,
+                ],
+            ]);
+
             throw $e;
         }
     }

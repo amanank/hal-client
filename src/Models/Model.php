@@ -12,6 +12,7 @@ use Amanank\HalClient\Query\QueryBuilder;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 abstract class Model extends EloquentModel {
 
@@ -101,14 +102,41 @@ abstract class Model extends EloquentModel {
         }
 
         unset($attributes['_links']);
+        unset($attributes['_embedded']);
+        unset($attributes['id']);
+
         foreach ($attributes as $key => $value) {
+            // Drop nested relation payloads that are not link lists.
+            if ($key === 'attributes' && is_array($value) && array_is_list($value) === false) {
+                unset($attributes[$key]);
+                continue;
+            }
+
             if (is_object($value) && method_exists($value, 'getLink')) {
                 $attributes[$key] = $value->getLink();
             } elseif ($value instanceof Collection) {
                 $attributes[$key] = $value->map(fn($item) => $item->getLink())->toArray();
+            } elseif (is_array($value)) {
+                $attributes[$key] = collect($value)->map(function ($item) {
+                    if (is_object($item) && method_exists($item, 'getLink')) {
+                        return $item->getLink();
+                    }
+
+                    if (is_array($item) && isset($item['_links']['self']['href'])) {
+                        return $item['_links']['self']['href'];
+                    }
+
+                    return $item;
+                })->toArray();
             }
 
         }
+
+        // Debug outgoing attributes to help diagnose payload issues.
+        Log::debug('HAL model payload', [
+            'model' => static::class,
+            'attributes' => $attributes,
+        ]);
 
         return $attributes;
     }
