@@ -53,6 +53,14 @@ class HalHasMany extends Relation {
                 $model = clone $relatedModel;
                 $model->setRawAttributes((array) $item, true);
                 $model->exists = true;
+
+                // Ensure an `id` attribute is available for table actions & lookups.
+                try {
+                    $model->setAttribute('id', $model->getId());
+                } catch (\Throwable $e) {
+                    // Ignore if an ID cannot be derived.
+                }
+
                 return $model;
             });
             
