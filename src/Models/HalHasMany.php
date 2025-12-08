@@ -25,18 +25,28 @@ class HalHasMany extends Relation {
         }
         try {
             $response = $this->entity->getConnection()->get($this->link);
-            $embededProperty = basename($this->link);
-
             $response = json_decode($response->getBody(), true);
 
-            $entities = $response["_embedded"][$embededProperty];
+            $relatedModel = new $this->related();
+            $embeddedKey = $this->resolveEndpoint($relatedModel)
+                ?? $this->resolveEndpoint($this->entity)
+                ?? basename($this->link);
 
-            $collection = collect($entities)->map(function ($item) {
-                $model = new $this->related();
+            $entities = $response["_embedded"][$embeddedKey] ?? [];
+
+            Log::debug('HalHasMany getResults', [
+                'link' => $this->link,
+                'embedded_keys' => array_keys($response['_embedded'] ?? []),
+                'embedded_key_used' => $embeddedKey,
+                'count' => is_array($entities) ? count($entities) : 0,
+            ]);
+
+            return collect($entities)->map(function ($item) use ($relatedModel) {
+                $model = clone $relatedModel;
                 $model->setRawAttributes((array) $item, true);
+                $model->exists = true;
                 return $model;
             });
-            return $collection;
         } catch (RequestException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
                 return null;
@@ -129,5 +139,24 @@ class HalHasMany extends Relation {
             $model->setRelation($relation, $results);
         }
         return $models;
+    }
+
+    protected function resolveEndpoint($model): ?string
+    {
+        if (! $model) {
+            return null;
+        }
+
+        if (! property_exists($model, '_endpoint')) {
+            return null;
+        }
+
+        try {
+            $ref = new \ReflectionProperty($model, '_endpoint');
+            $ref->setAccessible(true);
+            return $ref->getValue($model);
+        } catch (\ReflectionException $e) {
+            return null;
+        }
     }
 }
