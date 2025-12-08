@@ -3,31 +3,33 @@
 namespace Amanank\HalClient\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /**
- * A minimal Eloquent Builder wrapper for HAL relations that works with Filament.
+ * A Filament-compatible query builder for HAL relations.
+ * Wraps HAL collection-based results to appear as an Eloquent Builder.
  */
 class FilamentHalQueryBuilder extends Builder {
     protected $halRelation;
     protected $halResults;
+    protected $filtered = false;
 
     public function __construct(HalHasMany $relation) {
-        // Initialize minimal parent properties
-        $this->halRelation = $relation;
-        $this->halResults = null;
+        // Get results first to have a proper model
+        $results = $relation->getResults();
+        $model = $results->first();
         
-        // Set dummy query builder and model - use a generic model
+        // Don't call parent constructor - just set minimal properties
+        $this->halRelation = $relation;
+        $this->halResults = $results;
+        $this->model = $model; // Set to actual model or null
         $this->query = new \stdClass();
-        $this->model = $relation->getResults()->first() ?? new \stdClass();
     }
 
     /**
      * Execute the query and get results
      */
     public function get($columns = ['*']) {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
         return $this->halResults;
     }
 
@@ -35,10 +37,6 @@ class FilamentHalQueryBuilder extends Builder {
      * Apply wheres and get filtered results
      */
     public function where($column, $operator = null, $value = null, $boolean = 'and') {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
-
         // If $column is a Closure, it's a complex where clause - just return without filtering
         if ($column instanceof \Closure) {
             return $this;
@@ -78,6 +76,7 @@ class FilamentHalQueryBuilder extends Builder {
             }
         });
 
+        $this->filtered = true;
         return $this;
     }
 
@@ -85,10 +84,6 @@ class FilamentHalQueryBuilder extends Builder {
      * Filter by ID list
      */
     public function whereIn($column, $values) {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
-
         $this->halResults = $this->halResults->filter(function ($item) use ($column, $values) {
             return in_array($item->{$column} ?? null, $values);
         });
@@ -100,10 +95,6 @@ class FilamentHalQueryBuilder extends Builder {
      * Order by a column
      */
     public function orderBy($column, $direction = 'asc') {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
-
         $this->halResults = $this->halResults->sortBy(function ($item) use ($column) {
             return $item->{$column} ?? '';
         }, SORT_REGULAR, $direction === 'desc');
@@ -115,9 +106,6 @@ class FilamentHalQueryBuilder extends Builder {
      * Count the results
      */
     public function count() {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
         return $this->halResults->count();
     }
 
@@ -132,20 +120,27 @@ class FilamentHalQueryBuilder extends Builder {
      * Get the first result
      */
     public function first($columns = ['*']) {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
         return $this->halResults->first();
+    }
+
+    /**
+     * Find a specific model by ID
+     */
+    public function find($id, $columns = ['*']) {
+        return $this->halResults->firstWhere('id', $id);
+    }
+
+    /**
+     * Find multiple models by IDs
+     */
+    public function findMany($ids, $columns = ['*']) {
+        return $this->halResults->whereIn('id', $ids);
     }
 
     /**
      * Paginate the results
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null) {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
-
         $perPage = $perPage ?? 15;
         $page = $page ?? \Illuminate\Pagination\Paginator::resolveCurrentPage($pageName);
         $total = $total ?? $this->halResults->count();
@@ -189,25 +184,19 @@ class FilamentHalQueryBuilder extends Builder {
      * Get raw results without modification
      */
     public function getRawResults() {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
         return $this->halResults;
     }
 
     /**
-     * Dynamically handle any other method calls by delegating to collection
+     * Dynamically handle any other method calls
      */
     public function __call($method, $parameters) {
-        if ($this->halResults === null) {
-            $this->halResults = $this->halRelation->getResults();
-        }
-
         if (method_exists($this->halResults, $method)) {
             return call_user_func_array([$this->halResults, $method], $parameters);
         }
 
-        return parent::__call($method, $parameters);
+        // Return $this for method chaining on unknown methods
+        return $this;
     }
 }
 
