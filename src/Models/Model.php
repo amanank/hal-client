@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\ClientException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 abstract class Model extends EloquentModel {
 
@@ -208,7 +209,18 @@ abstract class Model extends EloquentModel {
         try {
             return parent::save($options);
         } catch (ClientException $e) {
-            if ($e->getResponse() && $e->getResponse()->getStatusCode() == 409) {
+            $status = $e->getResponse()?->getStatusCode();
+
+
+            if ($status === 400) {
+                $errors = $this->extractValidationErrors($e);
+
+                if (! empty($errors)) {
+                    throw ValidationException::withMessages($errors);
+                }
+            }
+
+            if ($status === 409) {
                 throw (new ConstraintViolationException("Constraint violation", 409, $e))->setModel(
                     get_class($this),
                     $this->exists ? $this->getLink() : null
@@ -216,6 +228,44 @@ abstract class Model extends EloquentModel {
             }
             throw $e;
         }
+    }
+
+    /**
+     * Map HAL API validation errors to Laravel's validation structure.
+     */
+    protected function extractValidationErrors(ClientException $e): array
+    {
+        $response = $e->getResponse();
+
+        if (! $response) {
+            return [];
+        }
+
+        $payload = json_decode((string) $response->getBody(), true);
+
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        $errors = [];
+
+        if (! empty($payload['subErrors']) && is_array($payload['subErrors'])) {
+            foreach ($payload['subErrors'] as $error) {
+                $field = $error['field'] ?? null;
+                $message = $error['message'] ?? ($error['debugMessage'] ?? null);
+
+                if ($field && $message) {
+                    // Filament forms use `data.<field>` keys.
+                    $errors["data.{$field}"][] = $message;
+                }
+            }
+        }
+
+        if (empty($errors) && ! empty($payload['message'])) {
+            $errors['error'][] = $payload['message'];
+        }
+
+        return $errors;
     }
 
     protected function performDeleteOnModel() {
