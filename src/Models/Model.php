@@ -211,13 +211,22 @@ abstract class Model extends EloquentModel {
         } catch (ClientException $e) {
             $status = $e->getResponse()?->getStatusCode();
 
-
             if ($status === 400) {
                 $errors = $this->extractValidationErrors($e);
 
                 if (! empty($errors)) {
                     throw ValidationException::withMessages($errors);
                 }
+
+                // If no structured errors, use response body as message
+                $responseBody = (string) $e->getResponse()->getBody();
+                try {
+                    $decoded = json_decode($responseBody, true);
+                    $message = $decoded['message'] ?? $decoded['debugMessage'] ?? 'Validation error from API';
+                } catch (\Exception $ex) {
+                    $message = 'Validation error from API';
+                }
+                throw ValidationException::withMessages(['form' => $message]);
             }
 
             if ($status === 409) {
@@ -226,7 +235,25 @@ abstract class Model extends EloquentModel {
                     $this->exists ? $this->getLink() : null
                 );
             }
-            throw $e;
+
+            // For other errors, convert to exception with user-friendly message
+            $responseBody = $e->getResponse() ? (string) $e->getResponse()->getBody() : null;
+            $message = 'An error occurred while saving. Please try again.';
+
+            if ($responseBody) {
+                try {
+                    $decoded = json_decode($responseBody, true);
+                    if (isset($decoded['message'])) {
+                        $message = $decoded['message'];
+                    } elseif (isset($decoded['debugMessage'])) {
+                        $message = $decoded['debugMessage'];
+                    }
+                } catch (\Exception $ex) {
+                    // Keep default message
+                }
+            }
+
+            throw new \Exception($message);
         }
     }
 
