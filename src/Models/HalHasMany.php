@@ -5,12 +5,14 @@ namespace Amanank\HalClient\Models;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 
 class HalHasMany extends Relation {
     protected $entity;
     protected $related;
     protected $link;
     protected $relationsName;
+    protected $cachedResults = null;
 
     public function __construct($entity, $related, $link, $relationsName) {
         $this->entity = $entity;
@@ -23,6 +25,12 @@ class HalHasMany extends Relation {
         if (!$this->link) {
             return collect();
         }
+        
+        // Return cached results if available
+        if ($this->cachedResults !== null) {
+            return $this->cachedResults;
+        }
+        
         try {
             $response = $this->entity->getConnection()->get($this->link);
             $response = json_decode($response->getBody(), true);
@@ -41,24 +49,37 @@ class HalHasMany extends Relation {
                 'count' => is_array($entities) ? count($entities) : 0,
             ]);
 
-            return collect($entities)->map(function ($item) use ($relatedModel) {
+            $this->cachedResults = collect($entities)->map(function ($item) use ($relatedModel) {
                 $model = clone $relatedModel;
                 $model->setRawAttributes((array) $item, true);
                 $model->exists = true;
                 return $model;
             });
+            
+            return $this->cachedResults;
         } catch (RequestException $e) {
             if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
-                return null;
+                return collect();
             }
             throw $e;
         }
     }
 
+    /**
+     * Get a query builder for this relation.
+     * Filament needs this to return a Builder-like object.
+     */
     public function getQuery() {
-        // Provide a builder interface for consumers expecting Eloquent relations.
-        return (new \Amanank\HalClient\Query\HalEloquentBuilder($this->related))
-            ->withParentId($this->entity->getId());
+        // Return a builder wrapper that Filament can use
+        return new FilamentHalQueryBuilder($this);
+    }
+
+    /**
+     * Execute the query as a Collection.
+     * Used by Filament's RelationManager to get the related records.
+     */
+    public function get($columns = ['*']) {
+        return $this->getResults();
     }
 
     public function associate($model) {
@@ -120,16 +141,16 @@ class HalHasMany extends Relation {
     }
 
     public function addConstraints() {
-        throw new \Exception('Constraints not supported for HalHasMany relation');
+        // No constraints for HAL relations
     }
 
     public function addEagerConstraints(array $models) {
-        throw new \Exception('Eager constraints not supported for HalHasMany relation');
+        // No eager constraints for HAL relations
     }
 
     public function initRelation(array $models, $relation) {
         foreach ($models as $model) {
-            $model->setRelation($relation, null);
+            $model->setRelation($relation, collect());
         }
         return $models;
     }
@@ -160,3 +181,4 @@ class HalHasMany extends Relation {
         }
     }
 }
+
