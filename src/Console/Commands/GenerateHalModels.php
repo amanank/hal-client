@@ -18,13 +18,14 @@ class GenerateHalModels extends Command {
     const TEMPLATE_PATH = __DIR__ . '/../../resources/templates/model_template.php';
     const MODEL_PATH = __DIR__ . '/../../Models/Discovered/';
 
-    public function __construct(Client $client, Filesystem $filesystem) {
+    public function __construct() {
         parent::__construct();
-        $this->client = $client;
-        $this->filesystem = $filesystem;
     }
 
     public function handle() {
+        // Resolve dependencies lazily when command runs, not during registration
+        $this->client = $this->laravel->make(Client::class);
+        $this->filesystem = $this->laravel->make(Filesystem::class);
         $this->getProfileLinks()
             ->filter(fn($link, $name) => $name !== 'self')
             ->map(fn($link, $name) => $this->fetchEntityDescriptor($name, $link['href']))
