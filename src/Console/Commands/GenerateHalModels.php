@@ -71,10 +71,7 @@ class GenerateHalModels extends Command {
         }
 
         $this->info('Refreshing Composer autoloader...');
-        $process = $this->laravel->make(\Symfony\Component\Process\Process::class, [
-            ['composer', 'dump-autoload'],
-            base_path()
-        ]);
+        $process = new Process(['composer', 'dump-autoload'], base_path());
 
         $process->run();
 
@@ -84,7 +81,6 @@ class GenerateHalModels extends Command {
             $this->error('Failed to refresh Composer autoloader: ' . $process->getErrorOutput());
         }
     }
-
     protected function getProfileLinks(): Collection {
         $response = $this->client->get('profile');
         $data = json_decode($response->getBody(), true);
