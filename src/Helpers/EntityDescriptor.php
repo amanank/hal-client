@@ -85,6 +85,8 @@ class EntityDescriptor {
             $this->enums->put($name, [
                 'name' => $name,
                 'propertyName' => $item['name'],
+                'propertyVar' => $this->normalizeName($item['name']),
+                'propertyMethod' => Str::studly($this->normalizeName($item['name'])),
                 'values' => explode(', ', $item['doc']['value'])
             ]);
             $item['returnType'] = "Enums\\{$name} ";
@@ -103,6 +105,7 @@ class EntityDescriptor {
     protected function toRelationDetail($attr) {
         return [
             'name' => $attr['name'],
+            'methodName' => $this->normalizeName($attr['name']),
             'returnType' => ucfirst(Str::before(Str::after($attr['rt'], '#'), '-representation')),
             'relationMethod' => Str::plural($attr['name']) === $attr['name'] ? 'hasMany' : 'hasOne',
         ];
@@ -116,8 +119,12 @@ class EntityDescriptor {
 
     protected function toMethodDetail($item) {
         return [
-            'functionName' => $item['name'],
-            'params' => collect($item['descriptor'])->map(fn($attr) => $attr['name']),
+            'functionName' => $this->normalizeName($item['name']),
+            'apiName' => $item['name'],
+            'params' => collect($item['descriptor'])->map(fn($attr) => [
+                'name' => $attr['name'],
+                'var' => $this->normalizeName($attr['name']),
+            ]),
             'returnType' => $this->detectReturnType($item)
         ];
     }
@@ -136,29 +143,42 @@ class EntityDescriptor {
     }
 
     protected function parseProperty($item): string {
-        return "protected {$item['returnType']}\${$item['name']};";
+        $name = $this->normalizeName($item['name']);
+        return "protected {$item['returnType']}\${$name};";
     }
 
     protected function parsePropertyDoc($item): string {
-        return "@property {$item['returnType']}\${$item['name']}";
+        $name = $this->normalizeName($item['name']);
+        return "@property {$item['returnType']}\${$name}";
     }
 
     protected function parseRelation($item): string {
-        return "public function {$item['name']}() {\n\t\treturn \$this->{$item['relationMethod']}({$item['returnType']}::class,'{$item['name']}');\n\t}";
+        return "public function {$item['methodName']}() {\n\t\treturn \$this->{$item['relationMethod']}({$item['returnType']}::class,'{$item['name']}');\n\t}";
     }
 
     protected function parseStaticMethod($item): string {
-        $functionParams = collect($item['params'])->map(fn($attr) => "\${$attr}")->implode(', ');
-        $searchParams = collect($item['params'])->map(fn($attr) => "'{$attr}' => \${$attr}")->implode(', ');
+        $functionParams = collect($item['params'])->map(fn($attr) => "\${$attr['var']}")->implode(', ');
+        $searchParams = collect($item['params'])->map(fn($attr) => "'{$attr['name']}' => \${$attr['var']}")->implode(', ');
 
-        return "public static function {$item['functionName']}($functionParams){$item['returnType']} {\n\t\treturn static::halSearch('{$item['functionName']}', [{$searchParams}]);\n\t}";
+        return "public static function {$item['functionName']}($functionParams){$item['returnType']} {\n\t\treturn static::halSearch('{$item['apiName']}', [{$searchParams}]);\n\t}";
     }
 
     protected function getEnumSetter($enum): string {
-        return "protected function set" . ucfirst($enum['propertyName']) . "Attribute(Enums\\{$enum['name']} \${$enum['propertyName']}) {\n\t\t\$this->attributes['{$enum['propertyName']}'] = \${$enum['propertyName']}->value;\n\t}";
+        return "protected function set{$enum['propertyMethod']}Attribute(Enums\\{$enum['name']} \${$enum['propertyVar']}) {\n\t\t\$this->attributes['{$enum['propertyName']}'] = \${$enum['propertyVar']}->value;\n\t}";
     }
 
     protected function getEnumGetter($enum): string {
-        return "protected function get" . ucfirst($enum['propertyName']) . "Attribute(\${$enum['propertyName']}) {\n\t\treturn \${$enum['propertyName']} ? Enums\\{$enum['name']}::from(\${$enum['propertyName']}) : null;\n\t}";
+        return "protected function get{$enum['propertyMethod']}Attribute(\${$enum['propertyVar']}) {\n\t\treturn \${$enum['propertyVar']} ? Enums\\{$enum['name']}::from(\${$enum['propertyVar']}) : null;\n\t}";
+    }
+
+    protected function normalizeName(string $name): string {
+        $normalized = Str::camel(str_replace(['-', '.', ' '], ' ', $name));
+        if ($normalized === '') {
+            return $name;
+        }
+        if (is_numeric($normalized[0])) {
+            return '_' . $normalized;
+        }
+        return $normalized;
     }
 }
