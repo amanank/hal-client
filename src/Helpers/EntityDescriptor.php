@@ -9,16 +9,30 @@ class EntityDescriptor {
 
     protected $enums;
 
-    public function __construct(protected string $name, protected array $descriptor) {
+    public function __construct(
+        protected string $name,
+        protected array $descriptor,
+        protected ?string $representationId = null,
+        protected bool $includeStaticMethods = true
+    ) {
         $this->enums = new Collection();
     }
 
     public function getClassName(): string {
-        return ucfirst(Str::before($this->descriptor[0]['id'], '-representation'));
+        $representation = $this->getRepresentationDescriptor();
+        if (!$representation || !isset($representation['id'])) {
+            return ucfirst(Str::singular($this->name));
+        }
+
+        return ucfirst(Str::before($representation['id'], '-representation'));
     }
 
     public function getDescriptor(): Collection {
         return new Collection($this->descriptor);
+    }
+
+    public function getName(): string {
+        return $this->name;
     }
 
     public function parseTemplate(string $template): string {
@@ -61,10 +75,26 @@ class EntityDescriptor {
         return $this->enums;
     }
 
+    protected function getRepresentationDescriptor(): ?array {
+        $descriptors = $this->getDescriptor();
+
+        if ($this->representationId) {
+            $matched = $descriptors->first(fn($item) => isset($item['id']) && $item['id'] === $this->representationId);
+            if ($matched) {
+                return $matched;
+            }
+        }
+
+        return $descriptors->first(fn($item) => isset($item['id']) && Str::endsWith($item['id'], '-representation'));
+    }
+
     protected function getRepresentation(): Collection {
-        return $this->getDescriptor()
-            ->filter(fn($item) => isset($item['id']) && Str::endsWith($item['id'], '-representation'))
-            ->flatMap(fn($item) => $item['descriptor']);
+        $representation = $this->getRepresentationDescriptor();
+        if (!$representation || !isset($representation['descriptor']) || !is_array($representation['descriptor'])) {
+            return collect();
+        }
+
+        return collect($representation['descriptor']);
     }
 
     protected function getFillables(): Collection {
@@ -112,6 +142,10 @@ class EntityDescriptor {
     }
 
     protected function getStaticMethods(): Collection {
+        if (!$this->includeStaticMethods) {
+            return collect();
+        }
+
         return $this->getDescriptor()
             ->filter(fn($item) => isset($item['name']) && !isset($item['id']))
             ->map(fn($item) => $this->toMethodDetail($item));

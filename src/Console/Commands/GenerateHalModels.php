@@ -7,6 +7,7 @@ use Amanank\HalClient\Client;
 use Amanank\HalClient\Helpers\EntityDescriptor;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
 class GenerateHalModels extends Command {
@@ -31,16 +32,33 @@ class GenerateHalModels extends Command {
         try {
             $this->client = $this->laravel->make(Client::class);
             $this->filesystem = $this->laravel->make(Filesystem::class);
+            $generatedClasses = collect();
+            $generatedEnums = collect();
 
             $this->getProfileLinks()
                 ->filter(fn($link, $name) => $name !== 'self')
                 ->map(fn($link, $name) => $this->fetchEntityDescriptor($name, $link['href']))
-                ->each(fn(EntityDescriptor $descriptor) => $this->createModelFile(
-                    $this->getModelFilePath($descriptor->getClassName()),
-                    $this->toModelTemplate($descriptor)
-                ))
-                ->filter(fn(EntityDescriptor $descriptor) => $descriptor->hasEnums())
-                ->flatMap(fn(EntityDescriptor $descriptor) => $descriptor->getEnums())
+                ->flatMap(fn(EntityDescriptor $descriptor) => $this->expandEntityDescriptors($descriptor))
+                ->each(function (EntityDescriptor $descriptor) use ($generatedClasses, $generatedEnums) {
+                    $className = $descriptor->getClassName();
+                    if ($generatedClasses->contains($className)) {
+                        return;
+                    }
+
+                    $this->createModelFile(
+                        $this->getModelFilePath($className),
+                        $this->toModelTemplate($descriptor)
+                    );
+                    $generatedClasses->push($className);
+
+                    if ($descriptor->hasEnums()) {
+                        foreach ($descriptor->getEnums() as $enum) {
+                            $generatedEnums->put($enum['name'], $enum);
+                        }
+                    }
+                });
+
+            $generatedEnums
                 ->each(fn($enum) => $this->createEnumFile(
                     $this->getEnumFilePath($enum['name']),
                     $this->toEnumTemplate($enum)
@@ -90,6 +108,66 @@ class GenerateHalModels extends Command {
     protected function fetchEntityDescriptor(string $name, string $href): EntityDescriptor {
         $response = $this->client->get($href);
         return new EntityDescriptor($name, json_decode($response->getBody(), true)["alps"]["descriptor"]);
+    }
+
+    protected function expandEntityDescriptors(EntityDescriptor $descriptor): Collection {
+        $descriptors = $descriptor->getDescriptor();
+        $primaryRepresentationId = $this->getPrimaryRepresentationId($descriptors);
+        if (!$primaryRepresentationId) {
+            return collect([$descriptor]);
+        }
+
+        $expanded = collect([
+            new EntityDescriptor($descriptor->getName(), $descriptors->all(), $primaryRepresentationId, true),
+        ]);
+
+        return $expanded->merge(
+            $this->getEmbeddedRepresentationIds($descriptors, $primaryRepresentationId)
+                ->map(function (string $representationId) use ($descriptors) {
+                    $embeddedName = Str::camel($this->getRepresentationName($descriptors, $representationId));
+                    return new EntityDescriptor($embeddedName, $descriptors->all(), $representationId, false);
+                })
+        );
+    }
+
+    protected function getPrimaryRepresentationId(Collection $descriptors): ?string {
+        $operationRt = $descriptors
+            ->filter(fn($item) => isset($item['id']) && isset($item['rt']) && Str::startsWith($item['rt'], '#') && Str::endsWith($item['rt'], '-representation'))
+            ->map(fn($item) => Str::after($item['rt'], '#'))
+            ->first();
+
+        if ($operationRt) {
+            return $operationRt;
+        }
+
+        return $descriptors
+            ->filter(fn($item) => isset($item['id']) && Str::endsWith($item['id'], '-representation'))
+            ->map(fn($item) => $item['id'])
+            ->first();
+    }
+
+    protected function getEmbeddedRepresentationIds(Collection $descriptors, string $primaryRepresentationId): Collection {
+        $primaryRepresentation = $descriptors->first(fn($item) => isset($item['id']) && $item['id'] === $primaryRepresentationId);
+        if (!$primaryRepresentation || !isset($primaryRepresentation['descriptor']) || !is_array($primaryRepresentation['descriptor'])) {
+            return collect();
+        }
+
+        return collect($primaryRepresentation['descriptor'])
+            ->filter(fn($item) => isset($item['type']) && $item['type'] === 'SAFE' && isset($item['rt']) && Str::startsWith($item['rt'], '#') && Str::endsWith($item['rt'], '-representation'))
+            ->map(fn($item) => Str::after($item['rt'], '#'))
+            ->reject(fn($representationId) => $representationId === $primaryRepresentationId)
+            ->unique()
+            ->values();
+    }
+
+    protected function getRepresentationName(Collection $descriptors, string $representationId): string {
+        $representation = $descriptors->first(fn($item) => isset($item['id']) && $item['id'] === $representationId);
+
+        if ($representation && isset($representation['name']) && $representation['name'] !== '') {
+            return $representation['name'];
+        }
+
+        return Str::before($representationId, '-representation');
     }
 
     protected function toModelTemplate(EntityDescriptor $descriptor): string {
