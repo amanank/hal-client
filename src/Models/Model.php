@@ -113,14 +113,23 @@ abstract class Model extends EloquentModel {
                 continue;
             }
 
-            if (is_object($value) && method_exists($value, 'getLink')) {
-                $attributes[$key] = $value->getLink();
-            } elseif ($value instanceof Collection) {
-                $attributes[$key] = $value->map(fn($item) => $item->getLink())->toArray();
+            if ($value instanceof Collection) {
+                $attributes[$key] = $value
+                    ->map(fn($item) => $this->resolveRelationLink($item))
+                    ->filter(fn($link) => !is_null($link))
+                    ->values()
+                    ->toArray();
+            } elseif (is_object($value)) {
+                $resolvedLink = $this->resolveRelationLink($value);
+                if ($resolvedLink !== null) {
+                    $attributes[$key] = $resolvedLink;
+                } else {
+                    unset($attributes[$key]);
+                }
             } elseif (is_array($value)) {
                 $attributes[$key] = collect($value)->map(function ($item) {
-                    if (is_object($item) && method_exists($item, 'getLink')) {
-                        return $item->getLink();
+                    if (is_object($item)) {
+                        return $this->resolveRelationLink($item);
                     }
 
                     if (is_array($item) && isset($item['_links']['self']['href'])) {
@@ -128,7 +137,7 @@ abstract class Model extends EloquentModel {
                     }
 
                     return $item;
-                })->toArray();
+                })->filter(fn($link) => !is_null($link))->values()->toArray();
             }
 
         }
@@ -140,6 +149,41 @@ abstract class Model extends EloquentModel {
         ]);
 
         return $attributes;
+    }
+
+    protected function resolveRelationLink($value): ?string {
+        if (is_array($value) && isset($value['_links']['self']['href'])) {
+            return $value['_links']['self']['href'];
+        }
+
+        if (!is_object($value)) {
+            return null;
+        }
+
+        if (method_exists($value, 'getLink')) {
+            try {
+                return $value->getLink();
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        // Fallback for plain objects carrying HAL attributes but not extending this model.
+        if (method_exists($value, 'getAttribute')) {
+            $links = $value->getAttribute('_links');
+            if (is_array($links) && isset($links['self']['href'])) {
+                return $links['self']['href'];
+            }
+        }
+
+        if (method_exists($value, 'getAttributes')) {
+            $rawAttributes = $value->getAttributes();
+            if (is_array($rawAttributes) && isset($rawAttributes['_links']['self']['href'])) {
+                return $rawAttributes['_links']['self']['href'];
+            }
+        }
+
+        return null;
     }
 
     protected function clearRelationCache() {
