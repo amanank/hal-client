@@ -2,7 +2,6 @@
     "name": "amanank/hal-client",
     "description": "A PHP client for interacting with HAL APIs.",
     "type": "library",
-    "version": "0.1.9-alpha",
     "require": {
         "php": ">=7.2",
         "illuminate/support": "^8.0|^9.0|^10.0|^12.0",
