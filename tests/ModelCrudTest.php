@@ -85,6 +85,8 @@ class ModelCrudTest extends TestCase {
 
         $this->assertTrue($user->exists);
         $this->assertEquals('users/9', $user->getLink());
+        $this->assertEquals('users/9/posts', $user->getAttributes()['_links']['posts']['href']);
+        $this->assertCount(1, $user->posts);
     }
 
     /**

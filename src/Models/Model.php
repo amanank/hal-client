@@ -234,9 +234,13 @@ abstract class Model extends EloquentModel {
             return false;
         }
 
-        $selfHref = $this->getConnection()->create($this->_endpoint, $this->getAttributesForSave());
+        $createdResource = $this->getConnection()->create($this->_endpoint, $this->getAttributesForSave());
 
-        $this->attributes['_links']['self']['href'] = $selfHref;
+        if (! empty($createdResource['data'])) {
+            $this->setRawAttributes($createdResource['data'], true);
+        } else {
+            $this->attributes['_links']['self']['href'] = $createdResource['location'];
+        }
 
         $this->exists = true;
 

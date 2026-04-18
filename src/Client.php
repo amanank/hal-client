@@ -78,16 +78,31 @@ class Client {
         }
     }
 
-    public function create($uri, $data = [], $options = []) {
+    public function create($uri, $data = [], $options = []): array {
         $response = $this->post($uri, $data, $options);
         if ($response->getStatusCode() == 201) {
-            // get redirect location
-            $location = $response->getHeader('Location');
-            if ($location) {
-                return $location[0];
-            } else {
-                return throw new \Exception('Post response does not contain a location header'); //TODO: return custom exception with request/response details
+            $body = (string) $response->getBody();
+            $payload = null;
+
+            if ($body !== '') {
+                $payload = json_decode($body, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $payload = null;
+                }
             }
+
+            $location = $response->getHeader('Location')[0] ?? null;
+            $location ??= $payload['_links']['self']['href'] ?? null;
+
+            if (! $location) {
+                throw new \Exception('Post response does not contain a location header or self link'); //TODO: return custom exception with request/response details
+            }
+
+            return [
+                'location' => $location,
+                'data' => is_array($payload) ? $payload : null,
+            ];
         } else {
             throw new \Exception('Post response status code is not 201');
         }

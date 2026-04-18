@@ -70,6 +70,11 @@ class MockAPI {
                 return new Response($code);
             }
 
+            if ($method == 'POST' && isset($responses[$method][$path][201])) {
+                list($code, $headers, $body) = $responses[$method][$path][201];
+                return new Response($code, $headers, $body);
+            }
+
             return $method == 'POST'
                 ? new Response(201, ['Location' => "$path/9"]) // return a 201 response with the location header set to the new resource path
                 : new Response(204);
